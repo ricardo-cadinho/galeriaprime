@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galeria Prime — Sistema de Gestão</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;--bg5:#2a2a2a;
+  --yellow:#f5c518;--yellow2:#ffd700;--red:#e53935;--green:#00c853;--blue:#2196f3;
+  --text:#f0f0f0;--muted:#888;--border:#2a2a2a;
+  --font:'Oswald',sans-serif;--body:'Roboto Condensed',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh}
+h1,h2,h3,h4{font-family:var(--font);letter-spacing:1px}
+.app{max-width:1100px;margin:0 auto;padding:12px}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 0 16px;border-bottom:2px solid var(--yellow);margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.header h1{font-size:20px;color:var(--yellow);letter-spacing:3px;text-transform:uppercase}
+.header-right{text-align:right;font-size:11px;color:var(--muted);letter-spacing:1px}
+
+/* NAV */
+.nav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
+.nav button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:7px 12px;font-family:var(--font);font-size:12px;letter-spacing:1px;cursor:pointer;transition:.2s;white-space:nowrap}
+.nav button.active{background:var(--yellow);color:#000;border-color:var(--yellow)}
+.nav button:hover:not(.active){border-color:var(--yellow);color:var(--yellow)}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.card{background:var(--bg3);border:1px solid var(--border);padding:12px;border-top:3px solid var(--yellow)}
+.card.red{border-top-color:var(--red)}.card.green{border-top-color:var(--green)}
+.card.muted{border-top-color:var(--muted)}.card.blue{border-top-color:var(--blue)}
+.card label{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:5px}
+.card .val{font-family:var(--font);font-size:20px;color:var(--yellow)}
+.card.red .val{color:var(--red)}.card.green .val{color:var(--green)}
+.card.muted .val{color:var(--text)}.card.blue .val{color:var(--blue)}
+
+/* LOJAS GRID */
+.lojas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-bottom:16px}
+.loja-btn{background:var(--bg3);border:2px solid var(--border);padding:8px 4px;cursor:pointer;transition:.2s;text-align:center}
+.loja-btn:hover{border-color:var(--yellow);transform:translateY(-2px)}
+.loja-btn.ocupada{border-color:#2a4a1a}.loja-btn.ocupada:hover{border-color:var(--green)}
+.loja-btn.atrasada{border-color:var(--red);animation:pulse 2s infinite}
+.loja-btn.parcial{border-color:#7a6000}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,57,53,.3)}50%{box-shadow:0 0 0 6px rgba(229,57,53,0)}}
+.loja-btn .num{font-family:var(--font);font-size:14px;color:var(--yellow)}
+.loja-btn .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-top:3px}
+.loja-btn .tenant{font-size:8px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;padding:16px;overflow-y:auto}
+.modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding-top:30px}
+.modal{background:var(--bg2);border:1px solid var(--yellow);max-width:580px;width:100%;padding:20px;position:relative}
+.modal h3{color:var(--yellow);font-family:var(--font);font-size:18px;letter-spacing:2px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.modal-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.modal-row label{color:var(--muted)}.modal-row span{color:var(--text);text-align:right}
+
+/* STATUS BADGES */
+.status-badge{display:inline-block;padding:3px 10px;font-size:11px;font-family:var(--font);letter-spacing:1px}
+.badge-ok{background:rgba(0,200,83,.15);color:var(--green);border:1px solid var(--green)}
+.badge-late{background:rgba(229,57,53,.15);color:var(--red);border:1px solid var(--red)}
+.badge-vaga{background:rgba(136,136,136,.15);color:var(--muted);border:1px solid var(--muted)}
+.badge-parcial{background:rgba(245,197,24,.12);color:var(--yellow);border:1px solid rgba(245,197,24,.4)}
+.badge-warn{background:rgba(33,150,243,.12);color:var(--blue);border:1px solid rgba(33,150,243,.4)}
+
+/* HIST TABLE */
+.hist-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:8px}
+.hist-table th{background:var(--bg4);color:var(--yellow);font-family:var(--font);font-size:10px;letter-spacing:1px;padding:7px 5px;text-align:left}
+.hist-table td{padding:6px 5px;border-bottom:1px solid var(--border);color:var(--text)}
+.hist-table tr:hover td{background:var(--bg3)}
+
+/* BUTTONS */
+.close-btn{background:transparent;border:1px solid var(--muted);color:var(--muted);padding:7px 18px;font-family:var(--font);letter-spacing:1px;cursor:pointer;margin-top:12px;float:right}
+.close-btn:hover{border-color:var(--red);color:var(--red)}
+.btn-primary{background:var(--yellow);color:#000;border:none;padding:9px 20px;font-family:var(--font);font-size:13px;letter-spacing:2px;cursor:pointer;transition:.2s}
+.btn-primary:hover{background:var(--yellow2)}
+.btn-secondary{background:transparent;border:1px solid var(--green);color:var(--green);padding:7px 16px;font-family:var(--font);font-size:12px;letter-spacing:1px;cursor:pointer}
+.btn-secondary:hover{background:rgba(0,200,83,.1)}
+.btn-danger{background:transparent;border:1px solid var(--red);color:var(--red);padding:7px 16px;font-family:var(--font);font-size:12px;letter-spacing:1px;cursor:pointer}
+.btn-danger:hover{background:rgba(229,57,53,.08)}
+.btn-warn{background:transparent;border:1px solid var(--yellow);color:var(--yellow);padding:7px 16px;font-family:var(--font);font-size:12px;letter-spacing:1px;cursor:pointer}
+.btn-warn:hover{background:rgba(245,197,24,.08)}
+.btn-blue{background:transparent;border:1px solid var(--blue);color:var(--blue);padding:7px 16px;font-family:var(--font);font-size:12px;letter-spacing:1px;cursor:pointer}
+.btn-blue:hover{background:rgba(33,150,243,.08)}
+.btn-xs{padding:3px 7px!important;font-size:10px!important}
+
+/* FORMS */
+.form-section{background:var(--bg3);border:1px solid var(--border);padding:14px;margin-bottom:14px}
+.form-section h3{color:var(--yellow);font-family:var(--font);font-size:14px;letter-spacing:2px;margin-bottom:12px;text-transform:uppercase}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.form-row.full{grid-template-columns:1fr}.form-row.tri{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:3px}
+.form-group label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.form-group input,.form-group select{background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:7px 9px;font-family:var(--body);font-size:13px;outline:none;width:100%}
+.form-group input:focus,.form-group select:focus{border-color:var(--yellow)}
+.form-group select option{background:var(--bg4)}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.main{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+table.main th{background:var(--bg4);color:var(--yellow);font-family:var(--font);font-size:10px;letter-spacing:1.5px;padding:9px 7px;text-align:left;border-bottom:1px solid var(--yellow)}
+table.main td{padding:8px 7px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.main tr:hover td{background:var(--bg3)}
+.tag{display:inline-block;padding:2px 7px;font-size:10px;font-family:var(--font);letter-spacing:1px}
+
+/* ALERTAS */
+.alert-box{background:rgba(229,57,53,.08);border:1px solid var(--red);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.alert-box .loja-id{font-family:var(--font);font-size:16px;color:var(--red)}
+.alert-box .info{font-size:11px;color:var(--muted)}
+.alert-box-warn{background:rgba(33,150,243,.07);border:1px solid var(--blue);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.alert-box-deb{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.4);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+
+/* RELATÓRIO */
+.rel-section{background:var(--bg3);border-left:3px solid var(--yellow);padding:12px 14px;margin-bottom:10px}
+.rel-section h4{font-family:var(--font);font-size:12px;color:var(--yellow);letter-spacing:2px;margin-bottom:8px}
+.rel-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.rel-row:last-child{border:none}
+.rel-row .amt{font-family:var(--font)}
+.rel-row .amt.income{color:var(--green)}.rel-row .amt.expense{color:var(--red)}.rel-row .amt.profit{color:var(--yellow);font-size:16px}
+.month-sel{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.month-sel select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;font-family:var(--body);font-size:13px;outline:none}
+
+/* PROGRESS */
+.prog-bg{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin:5px 0}
+.prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+
+/* CANCELADO */
+.row-cancel{opacity:.4;text-decoration:line-through}
+.estorno-info{font-size:10px;color:var(--red);margin-top:1px}
+
+/* REAJUSTE */
+.reaj-card{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--blue);padding:12px;margin-bottom:10px}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .form-row{grid-template-columns:1fr}
+  .form-row.tri{grid-template-columns:1fr 1fr}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .header h1{font-size:16px}
+  .nav button{padding:6px 9px;font-size:11px}
+  table.main{font-size:11px}
+  table.main th,table.main td{padding:6px 5px}
+  .modal{padding:14px}
+}
+@media(max-width:400px){
+  .cards{grid-template-columns:1fr 1fr}
+  .lojas-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+  <div>
+    <h1>&#127978; Galeria Prime</h1>
+    <span id="data-hoje" style="font-size:11px;color:var(--muted);letter-spacing:1px"></span>
+  </div>
+  <div class="header-right">SISTEMA DE GESTAO<br><span id="aviso-venc-header" style="color:var(--blue);font-size:10px"></span></div>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="navTo('dashboard',this)">&#128202; Dashboard</button>
+  <button onclick="navTo('lojas',this)">&#127978; Lojas</button>
+  <button onclick="navTo('pagamentos',this)">&#128176; Pagamentos</button>
+  <button onclick="navTo('despesas',this)">&#128203; Despesas</button>
+  <button onclick="navTo('debitos',this)">&#9888; Debitos</button>
+  <button onclick="navTo('reajuste',this)">&#128200; Reajuste</button>
+  <button onclick="navTo('cadastro',this)">&#10133; Cadastro</button>
+  <button onclick="navTo('relatorio',this)">&#128196; Relatorios</button>
+  <button onclick="navTo('historico',this)">&#128336; Historico</button>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="page-dashboard" class="page active">
+  <div class="cards" id="cards-dash"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+    <h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:14px">MAPA DAS LOJAS</h3>
+    <div style="display:flex;gap:10px;font-size:10px;color:var(--muted)">
+      <span>&#128994; Em dia</span><span>&#128308; Atrasada</span><span>&#9899; Vaga</span><span style="color:var(--yellow)">&#9679; Parcial</span>
+    </div>
+  </div>
+  <div class="lojas-grid" id="mapa-lojas"></div>
+  <div id="avisos-venc-dash" style="margin-bottom:10px"></div>
+  <div id="alertas-debitos-dash" style="margin-bottom:10px"></div>
+  <div>
+    <h3 style="font-family:var(--font);color:var(--red);letter-spacing:2px;font-size:13px;margin-bottom:8px">&#9888; ALUGUEIS EM ATRASO</h3>
+    <div id="alertas-atraso"></div>
+  </div>
+</div>
+
+<!-- ===== LOJAS ===== -->
+<div id="page-lojas" class="page">
+  <div class="form-section">
+    <h3>Filtro</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn-secondary btn-xs" onclick="filtrarLojas('todas')">Todas</button>
+      <button class="btn-secondary btn-xs" onclick="filtrarLojas('ocupadas')">Ocupadas</button>
+      <button class="btn-secondary btn-xs" onclick="filtrarLojas('vagas')">Vagas</button>
+      <button class="btn-secondary btn-xs" onclick="filtrarLojas('atrasadas')">Em Atraso</button>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+  <table class="main">
+    <thead><tr><th>LOJA</th><th>INQUILINO</th><th>ALUGUEL</th><th>VENC.</th><th>INICIO CONTR.</th><th>SITUACAO</th><th>ACAO</th></tr></thead>
+    <tbody id="tbody-lojas"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ===== PAGAMENTOS ===== -->
+<div id="page-pagamentos" class="page">
+  <div class="form-section">
+    <h3>Registrar Pagamento</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Loja</label><select id="pg-loja" onchange="preencherPg()"><option value="">Selecione...</option></select></div>
+      <div class="form-group"><label>Mes de Referencia</label><input type="month" id="pg-mes"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor Recebido (R$)</label><input type="number" id="pg-valor" step="0.01" placeholder="0,00"></div>
+      <div class="form-group"><label>Data do Pagamento</label><input type="date" id="pg-data"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group"><label>Observacao</label><input type="text" id="pg-obs" placeholder="Opcional"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="registrarPagamento()">&#10004; REGISTRAR</button>
+      <button class="btn-warn" onclick="abrirModalParcial()">&#43; PAGAMENTO PARCIAL</button>
+    </div>
+  </div>
+  <h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:13px;margin-bottom:8px">PAGAMENTOS REGISTRADOS</h3>
+  <div class="tbl-wrap">
+  <table class="main">
+    <thead><tr><th>DATA</th><th>LOJA</th><th>INQUILINO</th><th>REF.</th><th>TOTAL</th><th>PAGO</th><th>SALDO</th><th>SITUACAO</th><th>OBS</th><th>ACOES</th></tr></thead>
+    <tbody id="tbody-pagamentos"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ===== DESPESAS ===== -->
+<div id="page-despesas" class="page">
+  <div class="form-section">
+    <h3>Registrar Despesa</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Categoria</label>
+        <select id="desp-cat">
+          <option>Energia Eletrica</option><option>Agua</option><option>Manutencao</option>
+          <option>Limpeza</option><option>Impostos</option><option>Reparos</option>
+          <option>Seguranca</option><option>Administracao</option><option>Outros</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Mes de Referencia</label><input type="month" id="desp-mes"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$)</label><input type="number" id="desp-valor" step="0.01" placeholder="0,00"></div>
+      <div class="form-group"><label>Data</label><input type="date" id="desp-data"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group"><label>Descricao</label><input type="text" id="desp-desc" placeholder="Detalhe a despesa"></div>
+    </div>
+    <button class="btn-primary" onclick="registrarDespesa()">&#10004; REGISTRAR DESPESA</button>
+  </div>
+  <h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:13px;margin-bottom:8px">DESPESAS REGISTRADAS</h3>
+  <div class="tbl-wrap">
+  <table class="main">
+    <thead><tr><th>DATA</th><th>CATEGORIA</th><th>DESCRICAO</th><th>MES REF.</th><th>VALOR</th><th>SITUACAO</th><th>ACOES</th></tr></thead>
+    <tbody id="tbody-despesas"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ===== DEBITOS ANTIGOS ===== -->
+<div id="page-debitos" class="page">
+  <div class="form-section">
+    <h3>&#9888; Lancamento de Debito Antigo</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:12px;line-height:1.6">Registre alugueis em atraso anteriores ao inicio do uso do sistema.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Loja</label><select id="deb-loja"><option value="">Selecione...</option></select></div>
+      <div class="form-group"><label>Competencia (mes em atraso)</label><input type="month" id="deb-comp"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor em Atraso (R$)</label><input type="number" id="deb-valor" step="0.01" placeholder="0,00"></div>
+      <div class="form-group"><label>Observacao</label><input type="text" id="deb-obs" placeholder="Ex: Marco/2024"></div>
+    </div>
+    <button class="btn-warn" onclick="lancarDebito()">&#9888; LANCAR DEBITO</button>
+  </div>
+  <h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:13px;margin-bottom:8px">DEBITOS CADASTRADOS</h3>
+  <div class="tbl-wrap">
+  <table class="main">
+    <thead><tr><th>LOJA</th><th>INQUILINO</th><th>COMPETENCIA</th><th>VALOR</th><th>OBSERVACAO</th><th>LANCADO EM</th><th>SITUACAO</th><th>ACOES</th></tr></thead>
+    <tbody id="tbody-debitos"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ===== REAJUSTE ===== -->
+<div id="page-reajuste" class="page">
+  <div class="form-section">
+    <h3>&#128200; Reajuste Anual de Aluguel</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.6">Aplique reajuste pelo IPCA ou IGPM em uma ou todas as lojas. O historico de reajustes fica registrado para consulta.</p>
+    <div class="form-row tri">
+      <div class="form-group"><label>Loja (ou todas)</label>
+        <select id="reaj-loja"><option value="TODAS">Todas as lojas ocupadas</option></select>
+      </div>
+      <div class="form-group"><label>Indice</label>
+        <select id="reaj-indice"><option value="IPCA">IPCA</option><option value="IGPM">IGPM</option><option value="MANUAL">Percentual manual</option></select>
+      </div>
+      <div class="form-group"><label>Percentual (%)</label><input type="number" id="reaj-pct" step="0.01" placeholder="Ex: 5.46"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data de Vigencia</label><input type="date" id="reaj-data"></div>
+      <div class="form-group"><label>Observacao</label><input type="text" id="reaj-obs" placeholder="Ex: Reajuste IPCA 2025"></div>
+    </div>
+    <div id="reaj-preview" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-blue" onclick="previewReajuste()">&#128269; SIMULAR</button>
+      <button class="btn-primary" onclick="aplicarReajuste()">&#10004; APLICAR REAJUSTE</button>
+    </div>
+  </div>
+  <h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:13px;margin-bottom:8px">HISTORICO DE REAJUSTES</h3>
+  <div class="tbl-wrap">
+  <table class="main">
+    <thead><tr><th>DATA</th><th>LOJA</th><th>INDICE</th><th>%</th><th>VALOR ANT.</th><th>VALOR NOVO</th><th>OBS</th></tr></thead>
+    <tbody id="tbody-reajustes"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ===== CADASTRO ===== -->
+<div id="page-cadastro" class="page">
+  <div class="form-section">
+    <h3>Cadastrar / Editar Loja</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Loja</label>
+        <select id="cad-loja-sel" onchange="carregarCadastro()"><option value="">Selecione a loja...</option></select>
+      </div>
+      <div class="form-group"><label>Numero da Loja</label><input type="text" id="cad-num" readonly style="opacity:.6"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do Inquilino</label><input type="text" id="cad-nome" placeholder="Nome completo"></div>
+      <div class="form-group"><label>Telefone</label><input type="text" id="cad-tel" placeholder="(XX) 9xxxx-xxxx"></div>
+    </div>
+    <div class="form-row tri">
+      <div class="form-group"><label>Valor do Aluguel (R$)</label><input type="number" id="cad-aluguel" step="0.01" placeholder="0,00"></div>
+      <div class="form-group"><label>Dia de Vencimento</label><input type="number" id="cad-venc" min="1" max="31" placeholder="Ex: 10"></div>
+      <div class="form-group"><label>Inicio do Contrato</label><input type="date" id="cad-inicio"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>E-mail</label><input type="email" id="cad-email" placeholder="email@email.com"></div>
+      <div class="form-group"><label>CPF / CNPJ</label><input type="text" id="cad-doc" placeholder="000.000.000-00"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group"><label>Observacoes do Contrato</label><input type="text" id="cad-obs" placeholder="Clausulas especiais, garantias, etc."></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="salvarCadastro()">&#128190; SALVAR</button>
+      <button class="btn-danger" onclick="desocuparLoja()">&#10006; DESOCUPAR LOJA</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RELATÓRIOS ===== -->
+<div id="page-relatorio" class="page">
+  <div class="month-sel">
+    <label style="font-size:10px;color:var(--muted);letter-spacing:1px">PERIODO:</label>
+    <select id="rel-tipo" onchange="gerarRelatorio()">
+      <option value="mensal">Relatorio Mensal</option>
+      <option value="anual">Relatorio Anual</option>
+    </select>
+    <select id="rel-mes" onchange="gerarRelatorio()"></select>
+    <select id="rel-ano" onchange="gerarRelatorio()"></select>
+  </div>
+  <div id="rel-content"></div>
+</div>
+
+<!-- ===== HISTORICO ===== -->
+<div id="page-historico" class="page">
+  <h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:14px;margin-bottom:14px">&#128336; HISTORICO DE MOVIMENTACOES</h3>
+  <div class="tbl-wrap">
+  <table class="main">
+    <thead><tr><th>DATA/HORA</th><th>TIPO</th><th>DESCRICAO</th><th>VALOR</th><th>DETALHE</th></tr></thead>
+    <tbody id="tbody-historico"></tbody>
+  </table>
+  </div>
+</div>
+</div><!-- .app -->
+
+<!-- ===== MODAL: DETALHES LOJA ===== -->
+<div class="modal-overlay" id="modal-loja">
+  <div class="modal">
+    <h3 id="modal-title">LOJA <button class="btn-danger btn-xs" onclick="fecharModal('modal-loja')" style="float:right">&#10006;</button></h3>
+    <div id="modal-body"></div>
+    <button class="close-btn" onclick="fecharModal('modal-loja')">&#10006; FECHAR</button>
+    <div style="clear:both"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: PAGAMENTO PARCIAL ===== -->
+<div class="modal-overlay" id="modal-parcial">
+  <div class="modal">
+    <h3>&#128176; PAGAMENTO PARCIAL <button class="btn-danger btn-xs" onclick="fecharModal('modal-parcial')" style="float:right">&#10006;</button></h3>
+    <div class="form-row">
+      <div class="form-group"><label>Loja</label><select id="parc-loja" onchange="carregarRefsParcial()"><option value="">Selecione...</option></select></div>
+      <div class="form-group"><label>Mes de Referencia</label><select id="parc-ref" onchange="carregarInfoParcial()"><option value="">Selecione...</option></select></div>
+    </div>
+    <div id="parc-info" style="display:none;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+        <div style="background:var(--bg4);padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:3px">TOTAL ALUGUEL</div>
+          <div style="font-family:var(--font);font-size:14px" id="parc-total-val">R$ 0,00</div>
+        </div>
+        <div style="background:var(--bg4);padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:3px">JA PAGO</div>
+          <div style="font-family:var(--font);font-size:14px;color:var(--green)" id="parc-pago-val">R$ 0,00</div>
+        </div>
+        <div style="background:var(--bg4);padding:8px;text-align:center">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:3px">SALDO PENDENTE</div>
+          <div style="font-family:var(--font);font-size:14px;color:var(--red)" id="parc-saldo-val">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" id="parc-prog" style="width:0%"></div></div>
+      <div id="parc-hist-parcelas" style="margin-top:8px"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor a Pagar Agora (R$)</label><input type="number" id="parc-valor" step="0.01" placeholder="0,00"></div>
+      <div class="form-group"><label>Data</label><input type="date" id="parc-data"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group"><label>Observacao</label><input type="text" id="parc-obs" placeholder="Opcional"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+      <button class="btn-primary" onclick="salvarParcial()">&#10004; REGISTRAR PARCELA</button>
+      <button class="close-btn" style="float:none;margin-top:0" onclick="fecharModal('modal-parcial')">&#10006; FECHAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ESTORNO ===== -->
+<div class="modal-overlay" id="modal-estorno">
+  <div class="modal" style="max-width:440px">
+    <h3>&#8629; ESTORNAR / CANCELAR <button class="btn-danger btn-xs" onclick="fecharModal('modal-estorno')" style="float:right">&#10006;</button></h3>
+    <div id="estorno-desc" style="color:var(--muted);font-size:13px;margin-bottom:12px;padding:10px;background:var(--bg4);line-height:1.5"></div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Motivo do estorno (obrigatorio)</label>
+      <input type="text" id="estorno-motivo" placeholder="Informe o motivo...">
+    </div>
+    <input type="hidden" id="estorno-tipo">
+    <input type="hidden" id="estorno-id">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-danger" onclick="confirmarEstorno()">&#10004; CONFIRMAR</button>
+      <button class="close-btn" style="float:none;margin-top:0" onclick="fecharModal('modal-estorno')">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: EDITAR PAGAMENTO ===== -->
+<div class="modal-overlay" id="modal-edit-pag">
+  <div class="modal" style="max-width:440px">
+    <h3>&#9998; EDITAR PAGAMENTO <button class="btn-danger btn-xs" onclick="fecharModal('modal-edit-pag')" style="float:right">&#10006;</button></h3>
+    <input type="hidden" id="edit-pag-id">
+    <div class="form-row">
+      <div class="form-group"><label>Data do Pagamento</label><input type="date" id="edit-pag-data"></div>
+      <div class="form-group"><label>Valor Total do Aluguel (R$)</label><input type="number" id="edit-pag-valor" step="0.01"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group"><label>Observacao</label><input type="text" id="edit-pag-obs"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn-primary" onclick="salvarEdicaoPag()">&#128190; SALVAR</button>
+      <button class="close-btn" style="float:none;margin-top:0" onclick="fecharModal('modal-edit-pag')">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: EDITAR DESPESA ===== -->
+<div class="modal-overlay" id="modal-edit-desp">
+  <div class="modal" style="max-width:440px">
+    <h3>&#9998; EDITAR DESPESA <button class="btn-danger btn-xs" onclick="fecharModal('modal-edit-desp')" style="float:right">&#10006;</button></h3>
+    <input type="hidden" id="edit-desp-id">
+    <div class="form-row">
+      <div class="form-group"><label>Categoria</label>
+        <select id="edit-desp-cat">
+          <option>Energia Eletrica</option><option>Agua</option><option>Manutencao</option>
+          <option>Limpeza</option><option>Impostos</option><option>Reparos</option>
+          <option>Seguranca</option><option>Administracao</option><option>Outros</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Data</label><input type="date" id="edit-desp-data"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$)</label><input type="number" id="edit-desp-valor" step="0.01"></div>
+      <div class="form-group"><label>Mes Ref.</label><input type="month" id="edit-desp-mes"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group"><label>Descricao</label><input type="text" id="edit-desp-desc"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn-primary" onclick="salvarEdicaoDesp()">&#128190; SALVAR</button>
+      <button class="btn-danger" onclick="excluirDespesa()">&#128465; EXCLUIR</button>
+      <button class="close-btn" style="float:none;margin-top:0" onclick="fecharModal('modal-edit-desp')">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LOJAS_IDS=['01','02','03','04','05','06','101','102','103','104','105'];
+
+let state={lojas:{},pagamentos:[],despesas:[],debitos:[],reajustes:[],historico:[]};
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function fmt(v){return'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtData(d){if(!d)return'-';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function hoje(){return new Date().toISOString().slice(0,10);}
+function mesAtualStr(){const h=new Date();return h.getFullYear()+'-'+(h.getMonth()<9?'0':'')+(h.getMonth()+1);}
+
+function initState(){
+  const saved=localStorage.getItem('galeriaprime');
+  if(saved){
+    try{state=JSON.parse(saved);normalizar();return;}catch(e){}
+  }
+  LOJAS_IDS.forEach(id=>{state.lojas[id]={id,nome:'',tel:'',email:'',doc:'',aluguel:0,venc:10,inicio:'',obs:'',ocupada:false};});
+  save();
+}
+
+function normalizar(){
+  if(!state.historico)state.historico=[];
+  if(!state.debitos)state.debitos=[];
+  if(!state.reajustes)state.reajustes=[];
+  if(!state.pagamentos)state.pagamentos=[];
+  if(!state.despesas)state.despesas=[];
+  if(!state.lojas){state.lojas={};LOJAS_IDS.forEach(id=>{state.lojas[id]={id,nome:'',tel:'',email:'',doc:'',aluguel:0,venc:10,inicio:'',obs:'',ocupada:false};});}
+  state.pagamentos.forEach(p=>{
+    if(!p.id)p.id=uid();
+    if(p.cancelado===undefined)p.cancelado=false;
+    if(!p.parcelas)p.parcelas=[];
+    if(p.pago===undefined)p.pago=Number(p.valor);
+  });
+  state.despesas.forEach(d=>{if(!d.id)d.id=uid();if(d.cancelado===undefined)d.cancelado=false;});
+  state.debitos.forEach(d=>{if(!d.id)d.id=uid();if(d.quitado===undefined)d.quitado=false;});
+}
+
+function save(){localStorage.setItem('galeriaprime',JSON.stringify(state));}
+
+function addHist(tipo,desc,valor,det){
+  const agora=new Date();
+  state.historico.unshift({id:uid(),tipo,desc,valor:Number(valor)||0,det:det||'',
+    data:hoje(),hora:agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+  if(state.historico.length>400)state.historico=state.historico.slice(0,400);
+}
+
+function isAtrasada(id){
+  const l=state.lojas[id];
+  if(!l||!l.ocupada||!l.aluguel)return false;
+  const mes=mesAtualStr();
+  const pago=state.pagamentos.find(p=>p.loja===id&&p.mes===mes&&!p.cancelado&&Number(p.pago)>=Number(p.valor));
+  if(pago)return false;
+  const h=new Date();
+  const venc=new Date(h.getFullYear(),h.getMonth(),l.venc);
+  return h>venc;
+}
+function diasAtraso(id){
+  const l=state.lojas[id];
+  const h=new Date();
+  const venc=new Date(h.getFullYear(),h.getMonth(),l.venc);
+  return Math.max(0,Math.floor((h-venc)/(1000*60*60*24)));
+}
+function venceEm(id){
+  const l=state.lojas[id];
+  if(!l||!l.ocupada||!l.aluguel)return 999;
+  const h=new Date();
+  const venc=new Date(h.getFullYear(),h.getMonth(),l.venc);
+  const diff=Math.floor((venc-h)/(1000*60*60*24));
+  return diff;
+}
+
+function navTo(pg,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  btn.classList.add('active');
+  if(pg==='dashboard')renderDash();
+  if(pg==='lojas')renderLojas();
+  if(pg==='pagamentos')renderPagamentos();
+  if(pg==='despesas')renderDespesas();
+  if(pg==='debitos')renderDebitos();
+  if(pg==='reajuste')renderReajuste();
+  if(pg==='cadastro')renderCadastro();
+  if(pg==='relatorio')initRelatorio();
+  if(pg==='historico')renderHistorico();
+}
+
+/* ====== DASHBOARD ====== */
+function renderDash(){
+  const lojas=LOJAS_IDS.map(id=>state.lojas[id]);
+  const ocupadas=lojas.filter(l=>l.ocupada);
+  const vagas=lojas.filter(l=>!l.ocupada);
+  const mes=mesAtualStr();
+  const totalReceber=ocupadas.reduce((s,l)=>s+Number(l.aluguel),0);
+  const totalRecebido=state.pagamentos.filter(p=>p.mes===mes&&!p.cancelado).reduce((s,p)=>s+Number(p.pago||p.valor),0);
+  const totalDesp=state.despesas.filter(d=>d.mes===mes&&!d.cancelado).reduce((s,d)=>s+Number(d.valor),0);
+  const lucro=totalRecebido-totalDesp;
+  const emAberto=Math.max(0,totalReceber-totalRecebido);
+  const inadimpl=LOJAS_IDS.filter(id=>isAtrasada(id)).length;
+  const debitosAtivos=state.debitos.filter(d=>!d.quitado);
+  const totalDeb=debitosAtivos.reduce((s,d)=>s+Number(d.valor),0);
+
+  document.getElementById('cards-dash').innerHTML=`
+    <div class="card green"><label>Recebido no Mes</label><div class="val">${fmt(totalRecebido)}</div></div>
+    <div class="card red"><label>Em Aberto</label><div class="val">${fmt(emAberto)}</div></div>
+    <div class="card red"><label>Inadimplentes</label><div class="val">${inadimpl}</div></div>
+    <div class="card red"><label>Despesas do Mes</label><div class="val">${fmt(totalDesp)}</div></div>
+    <div class="card ${lucro>=0?'green':'red'}"><label>Lucro Liquido</label><div class="val">${fmt(lucro)}</div></div>
+    <div class="card muted"><label>Lojas Ocupadas</label><div class="val">${ocupadas.length}</div></div>
+    <div class="card muted"><label>Lojas Vagas</label><div class="val">${vagas.length}</div></div>
+    ${totalDeb>0?`<div class="card red"><label>Debitos Historicos</label><div class="val">${fmt(totalDeb)}</div></div>`:''}
+  `;
+
+  document.getElementById('mapa-lojas').innerHTML=LOJAS_IDS.map(id=>{
+    const l=state.lojas[id];
+    const atr=isAtrasada(id);
+    const pgm=state.pagamentos.find(p=>p.loja===id&&p.mes===mes&&!p.cancelado);
+    const quitado=pgm&&Number(pgm.pago)>=Number(pgm.valor);
+    const parcial=pgm&&!quitado&&Number(pgm.pago)>0;
+    let cls='loja-btn',dot='background:#444';
+    if(l.ocupada&&quitado){cls+=' ocupada';dot='background:var(--green)';}
+    else if(l.ocupada&&parcial){cls+=' parcial';dot='background:var(--yellow)';}
+    else if(l.ocupada&&atr){cls+=' atrasada';dot='background:var(--red)';}
+    else if(l.ocupada){cls+=' ocupada';dot='background:var(--yellow)';}
+    return`<div class="${cls}" onclick="abrirModalLoja('${id}')">
+      <div class="num">${id}</div>
+      <div><span class="status-dot" style="${dot}"></span></div>
+      <div class="tenant">${l.ocupada?l.nome.split(' ')[0]:'Vaga'}</div>
+    </div>`;
+  }).join('');
+
+  /* Avisos vencimento proximo (5 dias) */
+  const avisosDiv=document.getElementById('avisos-venc-dash');
+  const proxVenc=LOJAS_IDS.filter(id=>{
+    const d=venceEm(id);
+    const mes2=mesAtualStr();
+    const jaPago=state.pagamentos.find(p=>p.loja===id&&p.mes===mes2&&!p.cancelado&&Number(p.pago)>=Number(p.valor));
+    return d>=0&&d<=5&&state.lojas[id].ocupada&&!jaPago;
+  });
+  if(proxVenc.length){
+    avisosDiv.innerHTML='<h3 style="font-family:var(--font);color:var(--blue);letter-spacing:2px;font-size:13px;margin-bottom:8px">&#128276; VENCIMENTOS PROXIMOS (5 dias)</h3>'+
+      proxVenc.map(id=>{
+        const l=state.lojas[id];const d=venceEm(id);
+        return`<div class="alert-box-warn">
+          <div><div style="font-family:var(--font);font-size:15px;color:var(--blue)">Loja ${id}</div>
+          <div style="font-size:11px;color:var(--muted)">${l.nome} &bull; ${l.tel}</div></div>
+          <div style="text-align:right"><div style="font-family:var(--font);color:var(--blue)">${d===0?'VENCE HOJE':'Vence em '+d+' dia(s)'}</div>
+          <div style="font-size:11px;color:var(--muted)">${fmt(l.aluguel)}</div></div>
+        </div>`;
+      }).join('');
+  } else {avisosDiv.innerHTML='';}
+
+  /* Alertas debitos historicos */
+  const debDiv=document.getElementById('alertas-debitos-dash');
+  if(debitosAtivos.length){
+    const porLoja={};debitosAtivos.forEach(d=>{if(!porLoja[d.loja])porLoja[d.loja]=[];porLoja[d.loja].push(d);});
+    debDiv.innerHTML='<h3 style="font-family:var(--font);color:var(--yellow);letter-spacing:2px;font-size:13px;margin-bottom:8px">&#9888; DEBITOS HISTORICOS PENDENTES</h3>'+
+      Object.entries(porLoja).map(([loja,ds])=>{
+        const total=ds.reduce((s,d)=>s+Number(d.valor),0);
+        const l=state.lojas[loja];
+        return`<div class="alert-box-deb">
+          <div><div style="font-family:var(--font);font-size:15px;color:var(--yellow)">Loja ${loja}</div>
+          <div style="font-size:11px;color:var(--muted)">${l?l.nome:''} &bull; ${ds.length} mes(es) em atraso</div></div>
+          <div style="text-align:right"><div style="font-family:var(--font);color:var(--red)">${fmt(total)}</div></div>
+        </div>`;
+      }).join('');
+  } else {debDiv.innerHTML='';}
+
+  /* Alertas atraso corrente */
+  const atrasadas=LOJAS_IDS.filter(id=>isAtrasada(id));
+  const alertDiv=document.getElementById('alertas-atraso');
+  if(!atrasadas.length){alertDiv.innerHTML='<p style="color:var(--green);font-size:13px;padding:8px 0">&#10004; Nenhum aluguel em atraso!</p>';return;}
+  alertDiv.innerHTML=atrasadas.map(id=>{
+    const l=state.lojas[id];
+    return`<div class="alert-box">
+      <div><div class="loja-id">Loja ${id}</div><div class="info">${l.nome} &bull; ${l.tel}</div></div>
+      <div style="text-align:right"><div style="font-family:var(--font);color:var(--red)">${diasAtraso(id)} dias</div><div style="font-size:11px;color:var(--muted)">${fmt(l.aluguel)}</div></div>
+    </div>`;
+  }).join('');
+
+  /* Header aviso */
+  document.getElementById('aviso-venc-header').textContent=proxVenc.length?'&#128276; '+proxVenc.length+' vencimento(s) proximo(s)':'';
+}
+
+/* ====== LOJAS ====== */
+function renderLojas(filtro='todas'){
+  const tbody=document.getElementById('tbody-lojas');
+  tbody.innerHTML=LOJAS_IDS.map(id=>{
+    const l=state.lojas[id];
+    const atr=isAtrasada(id);
+    const mes=mesAtualStr();
+    const pgm=state.pagamentos.find(p=>p.loja===id&&p.mes===mes&&!p.cancelado);
+    let sit,sitClass;
+    if(!l.ocupada){sit='Vaga';sitClass='badge-vaga';}
+    else if(pgm&&Number(pgm.pago)>=Number(pgm.valor)){sit='Em Dia';sitClass='badge-ok';}
+    else if(pgm&&Number(pgm.pago)>0){sit='Parcial';sitClass='badge-parcial';}
+    else if(atr){sit='Atrasado';sitClass='badge-late';}
+    else{sit='Aguardando';sitClass='';}
+    if(filtro==='ocupadas'&&!l.ocupada)return'';
+    if(filtro==='vagas'&&l.ocupada)return'';
+    if(filtro==='atrasadas'&&!atr)return'';
+    return`<tr>
+      <td><b style="color:var(--yellow);font-family:var(--font)">Loja ${id}</b></td>
+      <td>${l.ocupada?l.nome:'<span style="color:var(--muted)">-</span>'}</td>
+      <td style="color:var(--green)">${l.aluguel?fmt(l.aluguel):'-'}</td>
+      <td>${l.aluguel?'Dia '+l.venc:'-'}</td>
+      <td style="font-size:11px;color:var(--muted)">${l.inicio?fmtData(l.inicio):'-'}</td>
+      <td><span class="tag ${sitClass}">${sit}</span></td>
+      <td><button class="btn-secondary btn-xs" onclick="abrirModalLoja('${id}')">Ver</button></td>
+    </tr>`;
+  }).join('');
+}
+function filtrarLojas(f){renderLojas(f);}
+
+/* ====== PAGAMENTOS ====== */
+function renderPagamentos(){
+  const sel=document.getElementById('pg-loja');
+  sel.innerHTML='<option value="">Selecione...</option>'+LOJAS_IDS.filter(id=>state.lojas[id].ocupada).map(id=>`<option value="${id}">Loja ${id} - ${state.lojas[id].nome}</option>`).join('');
+  document.getElementById('pg-data').value=hoje();
+  document.getElementById('pg-mes').value=mesAtualStr();
+  const sorted=[...state.pagamentos].sort((a,b)=>b.data.localeCompare(a.data));
+  const tbody=document.getElementById('tbody-pagamentos');
+  if(!sorted.length){tbody.innerHTML='<tr><td colspan="10" style="color:var(--muted);text-align:center;padding:18px">Nenhum pagamento registrado.</td></tr>';return;}
+  tbody.innerHTML=sorted.slice(0,80).map(p=>{
+    const l=state.lojas[p.loja];
+    const pago=Number(p.pago!==undefined?p.pago:p.valor);
+    const saldo=Number(p.valor)-pago;
+    const pct=Number(p.valor)>0?Math.round((pago/Number(p.valor))*100):0;
+    let sit,sitClass;
+    if(p.cancelado){sit='ESTORNADO';sitClass='badge-vaga';}
+    else if(saldo<=0){sit='QUITADO';sitClass='badge-ok';}
+    else if(pago>0){sit='PARCIAL '+pct+'%';sitClass='badge-parcial';}
+    else{sit='PENDENTE';sitClass='badge-late';}
+    const cr=p.cancelado?'class="row-cancel"':'';
+    const btnParc=(!p.cancelado&&saldo>0)?`<button class="btn-warn btn-xs" onclick="abrirParcialDireto('${p.id}')">+PARC</button> `:'';
+    const btnEdit=!p.cancelado?`<button class="btn-blue btn-xs" onclick="abrirEditPag('${p.id}')">&#9998;</button> `:'';
+    const btnEst=!p.cancelado?`<button class="btn-danger btn-xs" onclick="abrirEstorno('pag','${p.id}','Loja ${p.loja} ('+p.mes+')')">&#8629;</button>`:'';
+    const estInfo=p.cancelado?`<div class="estorno-info">${fmtData(p.dataCancel)}: ${p.motivoCancel||''}</div>`:'';
+    return`<tr ${cr}>
+      <td>${fmtData(p.data)}</td>
+      <td style="color:var(--yellow);font-family:var(--font)">Loja ${p.loja}</td>
+      <td style="font-size:11px">${l?l.nome:''}</td>
+      <td>${p.mes.split('-').reverse().join('/')}</td>
+      <td>${fmt(p.valor)}</td>
+      <td style="color:var(--green)">${fmt(pago)}</td>
+      <td style="color:${saldo>0?'var(--red)':'var(--muted)'}">${fmt(saldo)}</td>
+      <td><span class="tag ${sitClass}">${sit}</span></td>
+      <td style="font-size:11px;color:var(--muted)">${p.obs||''}${estInfo}</td>
+      <td style="white-space:nowrap">${btnParc}${btnEdit}${btnEst}</td>
+    </tr>`;
+  }).join('');
+}
+function preencherPg(){
+  const id=document.getElementById('pg-loja').value;
+  if(id&&state.lojas[id])document.getElementById('pg-valor').value=state.lojas[id].aluguel;
+}
+function registrarPagamento(){
+  const loja=document.getElementById('pg-loja').value;
+  const mes=document.getElementById('pg-mes').value;
+  const valor=parseFloat(document.getElementById('pg-valor').value);
+  const data=document.getElementById('pg-data').value;
+  const obs=document.getElementById('pg-obs').value;
+  if(!loja||!mes||!valor||!data){alert('Preencha todos os campos!');return;}
+  const existe=state.pagamentos.find(p=>p.loja===loja&&p.mes===mes&&!p.cancelado);
+  if(existe){if(!confirm('Ja existe pagamento ativo para esta loja/mes. Continuar?'))return;}
+  const id=uid();
+  state.pagamentos.push({id,loja,mes,data,valor,obs,cancelado:false,pago:valor,parcelas:[{valor,data,obs}]});
+  addHist('pagamento','Pagamento - Loja '+loja+' ('+mes.split('-').reverse().join('/')+')',valor,obs||'');
+  save();
+  document.getElementById('pg-valor').value='';document.getElementById('pg-obs').value='';
+  renderPagamentos();renderDash();
+}
+
+/* Editar pagamento */
+function abrirEditPag(id){
+  const p=state.pagamentos.find(x=>x.id===id);
+  if(!p)return;
+  document.getElementById('edit-pag-id').value=id;
+  document.getElementById('edit-pag-data').value=p.data;
+  document.getElementById('edit-pag-valor').value=p.valor;
+  document.getElementById('edit-pag-obs').value=p.obs||'';
+  document.getElementById('modal-edit-pag').classList.add('show');
+}
+function salvarEdicaoPag(){
+  const id=document.getElementById('edit-pag-id').value;
+  const p=state.pagamentos.find(x=>x.id===id);
+  if(!p)return;
+  const novoValor=parseFloat(document.getElementById('edit-pag-valor').value)||p.valor;
+  const novaData=document.getElementById('edit-pag-data').value||p.data;
+  const novaObs=document.getElementById('edit-pag-obs').value;
+  const antValor=p.valor;
+  p.data=novaData;p.obs=novaObs;p.valor=novoValor;
+  if(p.pago>novoValor)p.pago=novoValor;
+  addHist('edicao','Pagamento editado - Loja '+p.loja,novoValor,'Valor anterior: '+fmt(antValor));
+  save();fecharModal('modal-edit-pag');renderPagamentos();renderDash();
+}
+
+/* ====== PARCIAIS ====== */
+function abrirModalParcial(){
+  popularSelectParcial();
+  document.getElementById('parc-data').value=hoje();
+  document.getElementById('parc-info').style.display='none';
+  document.getElementById('modal-parcial').classList.add('show');
+}
+function abrirParcialDireto(pagId){
+  popularSelectParcial();
+  const p=state.pagamentos.find(x=>x.id===pagId);
+  if(!p)return;
+  document.getElementById('parc-loja').value=p.loja;
+  carregarRefsParcial();
+  setTimeout(()=>{document.getElementById('parc-ref').value=p.id;carregarInfoParcial();},60);
+  document.getElementById('parc-data').value=hoje();
+  document.getElementById('modal-parcial').classList.add('show');
+}
+function popularSelectParcial(){
+  const sel=document.getElementById('parc-loja');
+  sel.innerHTML='<option value="">Selecione...</option>'+LOJAS_IDS.filter(id=>state.lojas[id].ocupada).map(id=>`<option value="${id}">Loja ${id} - ${state.lojas[id].nome}</option>`).join('');
+  document.getElementById('parc-ref').innerHTML='<option value="">Selecione...</option>';
+  document.getElementById('parc-info').style.display='none';
+}
+function carregarRefsParcial(){
+  const loja=document.getElementById('parc-loja').value;
+  const sel=document.getElementById('parc-ref');
+  sel.innerHTML='<option value="">Selecione o mes...</option>';
+  if(!loja)return;
+  const pags=state.pagamentos.filter(p=>p.loja===loja&&!p.cancelado&&Number(p.pago)<Number(p.valor));
+  pags.forEach(p=>{sel.innerHTML+=`<option value="${p.id}">${p.mes.split('-').reverse().join('/')} - saldo: ${fmt(Number(p.valor)-Number(p.pago))}</option>`;});
+  document.getElementById('parc-info').style.display='none';
+}
+function carregarInfoParcial(){
+  const pagId=document.getElementById('parc-ref').value;
+  if(!pagId){document.getElementById('parc-info').style.display='none';return;}
+  const p=state.pagamentos.find(x=>x.id===pagId);
+  if(!p){document.getElementById('parc-info').style.display='none';return;}
+  const pago=Number(p.pago)||0,saldo=Number(p.valor)-pago;
+  const pct=Number(p.valor)>0?Math.round((pago/Number(p.valor))*100):0;
+  document.getElementById('parc-total-val').textContent=fmt(p.valor);
+  document.getElementById('parc-pago-val').textContent=fmt(pago);
+  document.getElementById('parc-saldo-val').textContent=fmt(saldo);
+  document.getElementById('parc-prog').style.width=pct+'%';
+  const hist=p.parcelas||[];
+  document.getElementById('parc-hist-parcelas').innerHTML=hist.length?
+    '<div style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:5px">PARCELAS JA REGISTRADAS</div>'+
+    '<table class="hist-table"><thead><tr><th>DATA</th><th>VALOR</th><th>OBS</th></tr></thead><tbody>'+
+    hist.map(pc=>`<tr><td>${fmtData(pc.data)}</td><td style="color:var(--green)">${fmt(pc.valor)}</td><td style="color:var(--muted)">${pc.obs||''}</td></tr>`).join('')+
+    '</tbody></table>':'<p style="font-size:11px;color:var(--muted)">Nenhuma parcela ainda.</p>';
+  document.getElementById('parc-info').style.display='block';
+}
+document.getElementById('parc-loja').addEventListener('change',carregarRefsParcial);
+document.getElementById('parc-ref').addEventListener('change',carregarInfoParcial);
+function salvarParcial(){
+  const pagId=document.getElementById('parc-ref').value;
+  const valor=parseFloat(document.getElementById('parc-valor').value);
+  const data=document.getElementById('parc-data').value;
+  const obs=document.getElementById('parc-obs').value;
+  if(!pagId){alert('Selecione o mes de referencia!');return;}
+  if(!valor||!data){alert('Preencha valor e data!');return;}
+  const p=state.pagamentos.find(x=>x.id===pagId);if(!p)return;
+  const saldo=Number(p.valor)-(Number(p.pago)||0);
+  if(valor>saldo+0.01){alert('Valor maior que o saldo ('+fmt(saldo)+')!');return;}
+  if(!p.parcelas)p.parcelas=[];
+  p.parcelas.push({valor,data,obs});
+  p.pago=(Number(p.pago)||0)+valor;
+  const restante=Number(p.valor)-p.pago;
+  addHist('parcial','Parcela - Loja '+p.loja+' ('+p.mes.split('-').reverse().join('/')+')',valor,'Saldo: '+fmt(restante));
+  save();fecharModal('modal-parcial');renderPagamentos();renderDash();
+  alert('Parcela registrada! Saldo restante: '+fmt(restante));
+}
+
+/* ====== DESPESAS ====== */
+function renderDespesas(){
+  document.getElementById('desp-data').value=hoje();
+  document.getElementById('desp-mes').value=mesAtualStr();
+  const sorted=[...state.despesas].sort((a,b)=>b.data.localeCompare(a.data));
+  const tbody=document.getElementById('tbody-despesas');
+  if(!sorted.length){tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:18px">Nenhuma despesa registrada.</td></tr>';return;}
+  tbody.innerHTML=sorted.map(d=>{
+    const cr=d.cancelado?'class="row-cancel"':'';
+    const sit=d.cancelado?'<span class="tag badge-vaga">ESTORNADA</span>':'<span class="tag badge-ok">ATIVA</span>';
+    const estInfo=d.cancelado?`<div class="estorno-info">${fmtData(d.dataCancel)}: ${d.motivoCancel||''}</div>`:'';
+    const btnEst=!d.cancelado?`<button class="btn-danger btn-xs" onclick="abrirEstorno('desp','${d.id}','${d.cat}: ${d.desc||''}')">&#8629;</button> `:'';
+    const btnEdit=!d.cancelado?`<button class="btn-blue btn-xs" onclick="abrirEditDesp('${d.id}')">&#9998;</button>`:'';
+    return`<tr ${cr}>
+      <td>${fmtData(d.data)}</td>
+      <td><span class="tag" style="background:rgba(245,197,24,.1);color:var(--yellow);border:1px solid rgba(245,197,24,.3)">${d.cat}</span></td>
+      <td style="font-size:11px">${d.desc||''}</td>
+      <td>${d.mes.split('-').reverse().join('/')}</td>
+      <td style="color:var(--red)">${fmt(d.valor)}</td>
+      <td>${sit}</td>
+      <td style="white-space:nowrap">${estInfo}${btnEst}${btnEdit}</td>
+    </tr>`;
+  }).join('');
+}
+function registrarDespesa(){
+  const cat=document.getElementById('desp-cat').value;
+  const mes=document.getElementById('desp-mes').value;
+  const valor=parseFloat(document.getElementById('desp-valor').value);
+  const data=document.getElementById('desp-data').value;
+  const desc=document.getElementById('desp-desc').value;
+  if(!cat||!mes||!valor||!data){alert('Preencha todos os campos!');return;}
+  state.despesas.push({id:uid(),cat,mes,data,valor,desc,cancelado:false});
+  addHist('despesa','Despesa: '+cat+(desc?' - '+desc:''),valor,'Mes: '+mes.split('-').reverse().join('/'));
+  save();
+  document.getElementById('desp-valor').value='';document.getElementById('desp-desc').value='';
+  renderDespesas();renderDash();
+}
+function abrirEditDesp(id){
+  const d=state.despesas.find(x=>x.id===id);if(!d)return;
+  document.getElementById('edit-desp-id').value=id;
+  document.getElementById('edit-desp-cat').value=d.cat;
+  document.getElementById('edit-desp-data').value=d.data;
+  document.getElementById('edit-desp-valor').value=d.valor;
+  document.getElementById('edit-desp-mes').value=d.mes;
+  document.getElementById('edit-desp-desc').value=d.desc||'';
+  document.getElementById('modal-edit-desp').classList.add('show');
+}
+function salvarEdicaoDesp(){
+  const id=document.getElementById('edit-desp-id').value;
+  const d=state.despesas.find(x=>x.id===id);if(!d)return;
+  d.cat=document.getElementById('edit-desp-cat').value;
+  d.data=document.getElementById('edit-desp-data').value;
+  d.valor=parseFloat(document.getElementById('edit-desp-valor').value)||d.valor;
+  d.mes=document.getElementById('edit-desp-mes').value;
+  d.desc=document.getElementById('edit-desp-desc').value;
+  addHist('edicao','Despesa editada: '+d.cat,d.valor,'');
+  save();fecharModal('modal-edit-desp');renderDespesas();renderDash();
+}
+function excluirDespesa(){
+  const id=document.getElementById('edit-desp-id').value;
+  if(!confirm('Excluir esta despesa permanentemente?'))return;
+  const idx=state.despesas.findIndex(x=>x.id===id);
+  if(idx>=0){
+    const d=state.despesas[idx];
+    addHist('exclusao','Despesa EXCLUIDA: '+d.cat+(d.desc?' - '+d.desc:''),d.valor,'');
+    state.despesas.splice(idx,1);
+  }
+  save();fecharModal('modal-edit-desp');renderDespesas();renderDash();
+}
+
+/* ====== ESTORNO ====== */
+function abrirEstorno(tipo,id,desc){
+  document.getElementById('estorno-tipo').value=tipo;
+  document.getElementById('estorno-id').value=id;
+  document.getElementById('estorno-motivo').value='';
+  document.getElementById('estorno-desc').textContent='Cancelar: '+desc;
+  document.getElementById('modal-estorno').classList.add('show');
+}
+function confirmarEstorno(){
+  const tipo=document.getElementById('estorno-tipo').value;
+  const id=document.getElementById('estorno-id').value;
+  const motivo=document.getElementById('estorno-motivo').value.trim();
+  if(!motivo){alert('Informe o motivo!');return;}
+  if(tipo==='pag'){
+    const p=state.pagamentos.find(x=>x.id===id);
+    if(!p||p.cancelado){alert('Ja estornado.');return;}
+    p.cancelado=true;p.motivoCancel=motivo;p.dataCancel=hoje();
+    addHist('estorno','Pagamento ESTORNADO - Loja '+p.loja+' ('+p.mes.split('-').reverse().join('/')+')',p.pago||p.valor,'Motivo: '+motivo);
+  } else {
+    const d=state.despesas.find(x=>x.id===id);
+    if(!d||d.cancelado){alert('Ja estornada.');return;}
+    d.cancelado=true;d.motivoCancel=motivo;d.dataCancel=hoje();
+    addHist('estorno','Despesa ESTORNADA: '+d.cat+(d.desc?' - '+d.desc:''),d.valor,'Motivo: '+motivo);
+  }
+  save();fecharModal('modal-estorno');renderPagamentos();renderDespesas();renderDash();
+  alert('Estorno registrado. Historico preservado.');
+}
+
+/* ====== DEBITOS ====== */
+function renderDebitos(){
+  const sel=document.getElementById('deb-loja');
+  sel.innerHTML='<option value="">Selecione...</option>'+LOJAS_IDS.filter(id=>state.lojas[id].ocupada).map(id=>`<option value="${id}">Loja ${id} - ${state.lojas[id].nome}</option>`).join('');
+  const tbody=document.getElementById('tbody-debitos');
+  if(!state.debitos.length){tbody.innerHTML='<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:18px">Nenhum debito lancado.</td></tr>';return;}
+  tbody.innerHTML=[...state.debitos].sort((a,b)=>a.loja.localeCompare(b.loja)).map(d=>{
+    const l=state.lojas[d.loja];
+    const cr=d.quitado?'class="row-cancel"':'';
+    const sit=d.quitado?'<span class="tag badge-ok">QUITADO</span>':'<span class="tag badge-late">PENDENTE</span>';
+    const btnQ=!d.quitado?`<button class="btn-secondary btn-xs" onclick="quitarDebito('${d.id}')">QUITAR</button> `:'';
+    const btnDel=`<button class="btn-danger btn-xs" onclick="excluirDebito('${d.id}')">&#128465;</button>`;
+    return`<tr ${cr}>
+      <td style="color:var(--yellow);font-family:var(--font)">Loja ${d.loja}</td>
+      <td style="font-size:11px">${l?l.nome:''}</td>
+      <td>${d.comp?d.comp.split('-').reverse().join('/'):'?'}</td>
+      <td style="color:var(--red)">${fmt(d.valor)}</td>
+      <td style="font-size:11px;color:var(--muted)">${d.obs||''}</td>
+      <td style="font-size:11px">${fmtData(d.dataCad)}</td>
+      <td>${sit}</td>
+      <td style="white-space:nowrap">${btnQ}${btnDel}</td>
+    </tr>`;
+  }).join('');
+}
+function lancarDebito(){
+  const loja=document.getElementById('deb-loja').value;
+  const comp=document.getElementById('deb-comp').value;
+  const valor=parseFloat(document.getElementById('deb-valor').value);
+  const obs=document.getElementById('deb-obs').value;
+  if(!loja||!comp||!valor){alert('Preencha loja, competencia e valor!');return;}
+  state.debitos.push({id:uid(),loja,comp,valor,obs,dataCad:hoje(),quitado:false});
+  addHist('debito','Debito lancado - Loja '+loja+' ('+comp.split('-').reverse().join('/')+')',valor,obs||'');
+  save();
+  document.getElementById('deb-valor').value='';document.getElementById('deb-obs').value='';document.getElementById('deb-comp').value='';
+  renderDebitos();renderDash();alert('Debito registrado!');
+}
+function quitarDebito(id){
+  const d=state.debitos.find(x=>x.id===id);if(!d)return;
+  if(!confirm('Marcar como quitado?'))return;
+  d.quitado=true;d.dataQuit=hoje();
+  addHist('debito-quit','Debito quitado - Loja '+d.loja,d.valor,'');
+  save();renderDebitos();renderDash();
+}
+function excluirDebito(id){
+  if(!confirm('Excluir este debito permanentemente?'))return;
+  const idx=state.debitos.findIndex(x=>x.id===id);
+  if(idx>=0){addHist('exclusao','Debito excluido - Loja '+state.debitos[idx].loja,state.debitos[idx].valor,'');state.debitos.splice(idx,1);}
+  save();renderDebitos();renderDash();
+}
+
+/* ====== REAJUSTE ====== */
+function renderReajuste(){
+  const sel=document.getElementById('reaj-loja');
+  sel.innerHTML='<option value="TODAS">Todas as lojas ocupadas</option>'+
+    LOJAS_IDS.filter(id=>state.lojas[id].ocupada).map(id=>`<option value="${id}">Loja ${id} - ${state.lojas[id].nome} (${fmt(state.lojas[id].aluguel)})</option>`).join('');
+  document.getElementById('reaj-data').value=hoje();
+  renderTabelaReajuste();
+}
+function previewReajuste(){
+  const lojaId=document.getElementById('reaj-loja').value;
+  const pct=parseFloat(document.getElementById('reaj-pct').value);
+  const indice=document.getElementById('reaj-indice').value;
+  if(!pct){alert('Informe o percentual!');return;}
+  const lojas=lojaId==='TODAS'?LOJAS_IDS.filter(id=>state.lojas[id].ocupada):[lojaId];
+  const linhas=lojas.map(id=>{
+    const l=state.lojas[id];
+    const novo=l.aluguel*(1+pct/100);
+    return`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:var(--yellow);font-family:var(--font)">Loja ${id}</span>
+      <span style="color:var(--muted)">${l.nome}</span>
+      <span>${fmt(l.aluguel)}</span>
+      <span style="color:var(--green)">&#8594; ${fmt(novo)}</span>
+      <span style="color:var(--green)">+${fmt(novo-l.aluguel)}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('reaj-preview').innerHTML=`
+    <div style="background:var(--bg3);border:1px solid var(--blue);padding:12px;margin-top:10px">
+      <div style="font-family:var(--font);color:var(--blue);font-size:12px;letter-spacing:1px;margin-bottom:8px">SIMULACAO DE REAJUSTE ${indice} ${pct}%</div>
+      ${linhas}
+    </div>`;
+}
+function aplicarReajuste(){
+  const lojaId=document.getElementById('reaj-loja').value;
+  const pct=parseFloat(document.getElementById('reaj-pct').value);
+  const indice=document.getElementById('reaj-indice').value;
+  const data=document.getElementById('reaj-data').value;
+  const obs=document.getElementById('reaj-obs').value;
+  if(!pct||!data){alert('Informe percentual e data!');return;}
+  if(!confirm('Aplicar reajuste de '+pct+'% ('+indice+') em '+(lojaId==='TODAS'?'TODAS AS LOJAS':'Loja '+lojaId)+'?'))return;
+  const lojas=lojaId==='TODAS'?LOJAS_IDS.filter(id=>state.lojas[id].ocupada):[lojaId];
+  lojas.forEach(id=>{
+    const l=state.lojas[id];
+    const antigo=l.aluguel;
+    const novo=Math.round(l.aluguel*(1+pct/100)*100)/100;
+    l.aluguel=novo;
+    if(!state.reajustes)state.reajustes=[];
+    state.reajustes.push({id:uid(),loja:id,indice,pct,antigo,novo,data,obs});
+    addHist('reajuste','Reajuste '+indice+' '+pct+'% - Loja '+id,novo,'Anterior: '+fmt(antigo)+' > Novo: '+fmt(novo));
+  });
+  save();renderReajuste();renderDash();
+  document.getElementById('reaj-preview').innerHTML='';
+  alert('Reajuste aplicado em '+lojas.length+' loja(s)!');
+}
+function renderTabelaReajuste(){
+  const tbody=document.getElementById('tbody-reajustes');
+  const reaj=state.reajustes||[];
+  if(!reaj.length){tbody.innerHTML='<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:18px">Nenhum reajuste registrado.</td></tr>';return;}
+  tbody.innerHTML=[...reaj].sort((a,b)=>b.data.localeCompare(a.data)).map(r=>{
+    const diff=r.novo-r.antigo;
+    return`<tr>
+      <td>${fmtData(r.data)}</td>
+      <td style="color:var(--yellow);font-family:var(--font)">Loja ${r.loja}</td>
+      <td><span class="tag badge-warn">${r.indice}</span></td>
+      <td style="color:var(--green)">+${r.pct}%</td>
+      <td style="color:var(--muted)">${fmt(r.antigo)}</td>
+      <td style="color:var(--green)">${fmt(r.novo)}</td>
+      <td style="font-size:11px;color:var(--muted)">${r.obs||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ====== CADASTRO ====== */
+function renderCadastro(){
+  const sel=document.getElementById('cad-loja-sel');
+  sel.innerHTML='<option value="">- Selecione a loja -</option>'+LOJAS_IDS.map(id=>{
+    const l=state.lojas[id];
+    return`<option value="${id}">Loja ${id}${l.ocupada?' - '+l.nome:' (Vaga)'}</option>`;
+  }).join('');
+}
+function carregarCadastro(){
+  const id=document.getElementById('cad-loja-sel').value;
+  if(!id){['cad-num','cad-nome','cad-tel','cad-email','cad-doc','cad-aluguel','cad-venc','cad-inicio','cad-obs'].forEach(x=>document.getElementById(x).value='');return;}
+  const l=state.lojas[id];
+  document.getElementById('cad-num').value='Loja '+id;
+  document.getElementById('cad-nome').value=l.nome||'';
+  document.getElementById('cad-tel').value=l.tel||'';
+  document.getElementById('cad-email').value=l.email||'';
+  document.getElementById('cad-doc').value=l.doc||'';
+  document.getElementById('cad-aluguel').value=l.aluguel||'';
+  document.getElementById('cad-venc').value=l.venc||10;
+  document.getElementById('cad-inicio').value=l.inicio||'';
+  document.getElementById('cad-obs').value=l.obs||'';
+}
+function salvarCadastro(){
+  const id=document.getElementById('cad-loja-sel').value;
+  if(!id){alert('Selecione uma loja!');return;}
+  const nome=document.getElementById('cad-nome').value;
+  const tel=document.getElementById('cad-tel').value;
+  const email=document.getElementById('cad-email').value;
+  const doc=document.getElementById('cad-doc').value;
+  const aluguel=parseFloat(document.getElementById('cad-aluguel').value)||0;
+  const venc=parseInt(document.getElementById('cad-venc').value)||10;
+  const inicio=document.getElementById('cad-inicio').value;
+  const obs=document.getElementById('cad-obs').value;
+  state.lojas[id]={id,nome,tel,email,doc,aluguel,venc,inicio,obs,ocupada:!!nome};
+  addHist('cadastro','Cadastro atualizado - Loja '+id+(nome?' ('+nome+')':''),0,'Aluguel: '+fmt(aluguel)+' | Venc: dia '+venc);
+  save();alert('Cadastro salvo!');renderCadastro();renderDash();
+}
+function desocuparLoja(){
+  const id=document.getElementById('cad-loja-sel').value;
+  if(!id){alert('Selecione uma loja!');return;}
+  if(!confirm('Desocupar Loja '+id+'? Historico mantido.'))return;
+  state.lojas[id]={...state.lojas[id],nome:'',tel:'',email:'',doc:'',ocupada:false};
+  addHist('cadastro','Loja '+id+' desocupada',0,'');
+  save();alert('Loja marcada como vaga.');renderCadastro();renderDash();
+}
+
+/* ====== RELATÓRIOS ====== */
+function initRelatorio(){
+  const selMes=document.getElementById('rel-mes'),selAno=document.getElementById('rel-ano');
+  if(selMes.options.length===0){
+    ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].forEach((m,i)=>selMes.add(new Option(m,(i+1<10?'0':'')+(i+1))));
+    const h=new Date();selMes.value=(h.getMonth()+1<10?'0':'')+(h.getMonth()+1);
+    for(let y=h.getFullYear();y>=h.getFullYear()-3;y--)selAno.add(new Option(y,y));
+  }
+  gerarRelatorio();
+}
+function gerarRelatorio(){
+  const tipo=document.getElementById('rel-tipo').value;
+  const mes=document.getElementById('rel-mes').value;
+  const ano=document.getElementById('rel-ano').value;
+  const div=document.getElementById('rel-content');
+  if(tipo==='mensal'){
+    const mesStr=ano+'-'+mes;
+    const pgs=state.pagamentos.filter(p=>p.mes===mesStr&&!p.cancelado);
+    const desps=state.despesas.filter(d=>d.mes===mesStr&&!d.cancelado);
+    const totalRec=pgs.reduce((s,p)=>s+Number(p.pago||p.valor),0);
+    const totalDesp=desps.reduce((s,d)=>s+Number(d.valor),0);
+    const lucro=totalRec-totalDesp;
+    const mNomes=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const mNome=mNomes[parseInt(mes)-1];
+    div.innerHTML=`<h3 style="font-family:var(--font);color:var(--yellow);font-size:17px;letter-spacing:3px;margin-bottom:14px">RELATORIO - ${mNome.toUpperCase()} ${ano}</h3>
+    <div class="rel-section">
+      <h4>ALUGUEIS RECEBIDOS</h4>
+      ${pgs.length?pgs.map(p=>`<div class="rel-row"><span>Loja ${p.loja} - ${state.lojas[p.loja]?state.lojas[p.loja].nome:''}</span><span class="amt income">${fmt(p.pago||p.valor)}</span></div>`).join(''):'<div style="color:var(--muted);font-size:12px">Nenhum pagamento.</div>'}
+      <div class="rel-row" style="margin-top:6px;border-top:1px solid var(--yellow)"><b style="color:var(--yellow)">TOTAL RECEBIDO</b><span class="amt income">${fmt(totalRec)}</span></div>
+    </div>
+    <div class="rel-section" style="border-left-color:var(--red)">
+      <h4 style="color:var(--red)">DESPESAS</h4>
+      ${desps.length?desps.map(d=>`<div class="rel-row"><span>${d.cat} - ${d.desc||''}</span><span class="amt expense">${fmt(d.valor)}</span></div>`).join(''):'<div style="color:var(--muted);font-size:12px">Nenhuma despesa.</div>'}
+      <div class="rel-row" style="margin-top:6px;border-top:1px solid var(--red)"><b style="color:var(--red)">TOTAL DESPESAS</b><span class="amt expense">${fmt(totalDesp)}</span></div>
+    </div>
+    <div class="rel-section" style="border-left-color:${lucro>=0?'var(--green)':'var(--red)'}">
+      <h4 style="color:${lucro>=0?'var(--green)':'var(--red)'}">RESULTADO</h4>
+      <div class="rel-row"><span>Total Recebido</span><span class="amt income">${fmt(totalRec)}</span></div>
+      <div class="rel-row"><span>Total Despesas</span><span class="amt expense">- ${fmt(totalDesp)}</span></div>
+      <div class="rel-row" style="padding-top:8px;border-top:1px solid ${lucro>=0?'var(--green)':'var(--red)'}">
+        <b style="color:${lucro>=0?'var(--green)':'var(--red)'}">LUCRO LIQUIDO</b>
+        <span class="amt profit" style="color:${lucro>=0?'var(--green)':'var(--red)'}">${fmt(lucro)}</span>
+      </div>
+    </div>`;
+  } else {
+    const meses=['01','02','03','04','05','06','07','08','09','10','11','12'];
+    const mNomes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let totRec=0,totDesp=0;
+    const rows=meses.map((m,i)=>{
+      const ms=ano+'-'+m;
+      const rec=state.pagamentos.filter(p=>p.mes===ms&&!p.cancelado).reduce((s,p)=>s+Number(p.pago||p.valor),0);
+      const desp=state.despesas.filter(d=>d.mes===ms&&!d.cancelado).reduce((s,d)=>s+Number(d.valor),0);
+      totRec+=rec;totDesp+=desp;const liq=rec-desp;
+      return`<tr><td style="color:var(--yellow);font-family:var(--font)">${mNomes[i]}/${ano}</td><td style="color:var(--green)">${fmt(rec)}</td><td style="color:var(--red)">${fmt(desp)}</td><td style="color:${liq>=0?'var(--green)':'var(--red)'}"><b>${fmt(liq)}</b></td></tr>`;
+    }).join('');
+    const lucroAnual=totRec-totDesp;
+    div.innerHTML=`<h3 style="font-family:var(--font);color:var(--yellow);font-size:17px;letter-spacing:3px;margin-bottom:14px">RELATORIO ANUAL - ${ano}</h3>
+    <div class="tbl-wrap"><table class="main">
+      <thead><tr><th>MES</th><th>RECEBIDO</th><th>DESPESAS</th><th>LUCRO LIQUIDO</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="background:var(--bg4)"><td style="font-family:var(--font);color:var(--yellow)">TOTAL ${ano}</td>
+        <td style="color:var(--green);font-family:var(--font)">${fmt(totRec)}</td>
+        <td style="color:var(--red);font-family:var(--font)">${fmt(totDesp)}</td>
+        <td style="color:${lucroAnual>=0?'var(--green)':'var(--red)'};font-family:var(--font);font-size:15px">${fmt(lucroAnual)}</td>
+      </tr></tfoot>
+    </table></div>`;
+  }
+}
+
+/* ====== HISTORICO ====== */
+function renderHistorico(){
+  const tbody=document.getElementById('tbody-historico');
+  if(!state.historico||!state.historico.length){tbody.innerHTML='<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:18px">Nenhuma movimentacao registrada.</td></tr>';return;}
+  const cores={'pagamento':'var(--green)','parcial':'var(--green)','despesa':'var(--red)','estorno':'var(--red)','debito':'var(--yellow)','debito-quit':'var(--green)','reajuste':'var(--blue)','cadastro':'var(--muted)','edicao':'var(--blue)','exclusao':'var(--red)'};
+  tbody.innerHTML=state.historico.slice(0,200).map(h=>{
+    const cor=cores[h.tipo]||'var(--text)';
+    return`<tr>
+      <td style="font-size:11px;color:var(--muted)">${fmtData(h.data)} ${h.hora}</td>
+      <td><span style="font-size:10px;font-family:var(--font);color:${cor};letter-spacing:1px">${h.tipo.toUpperCase()}</span></td>
+      <td style="font-size:12px">${h.desc}</td>
+      <td style="color:${cor};font-family:var(--font);font-size:12px">${h.valor>0?fmt(h.valor):'&mdash;'}</td>
+      <td style="font-size:11px;color:var(--muted)">${h.det||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ====== MODAL LOJA ====== */
+function abrirModalLoja(id){
+  const l=state.lojas[id];
+  const mes=mesAtualStr();
+  const pgm=state.pagamentos.find(p=>p.loja===id&&p.mes===mes&&!p.cancelado);
+  const atr=isAtrasada(id);
+  const hist=[...state.pagamentos].filter(p=>p.loja===id).sort((a,b)=>b.mes.localeCompare(a.mes)).slice(0,12);
+  const debsLoja=state.debitos.filter(d=>d.loja===id&&!d.quitado);
+  const totalDeb=debsLoja.reduce((s,d)=>s+Number(d.valor),0);
+  const dVenc=venceEm(id);
+  let sitBadge=l.ocupada
+    ?(pgm&&Number(pgm.pago)>=Number(pgm.valor)?'<span class="status-badge badge-ok">EM DIA</span>'
+      :(pgm&&Number(pgm.pago)>0?'<span class="status-badge badge-parcial">PARCIAL</span>'
+        :(atr?'<span class="status-badge badge-late">ATRASADO</span>'
+          :(dVenc>=0&&dVenc<=5?'<span class="status-badge badge-warn">VENCE EM '+dVenc+'d</span>':'<span class="status-badge">AGUARDANDO</span>'))))
+    :'<span class="status-badge badge-vaga">VAGA</span>';
+  document.getElementById('modal-title').textContent='LOJA '+id;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-row"><label>Situacao</label><span>${sitBadge}</span></div>
+    ${l.ocupada?`
+    <div class="modal-row"><label>Inquilino</label><span>${l.nome}</span></div>
+    <div class="modal-row"><label>Telefone</label><span>${l.tel||'-'}</span></div>
+    <div class="modal-row"><label>E-mail</label><span>${l.email||'-'}</span></div>
+    ${l.doc?`<div class="modal-row"><label>CPF/CNPJ</label><span>${l.doc}</span></div>`:''}
+    <div class="modal-row"><label>Aluguel</label><span style="color:var(--green)">${fmt(l.aluguel)}</span></div>
+    <div class="modal-row"><label>Vencimento</label><span>Todo dia ${l.venc}</span></div>
+    ${l.inicio?`<div class="modal-row"><label>Inicio Contrato</label><span>${fmtData(l.inicio)}</span></div>`:''}
+    ${l.obs?`<div class="modal-row"><label>Obs. Contrato</label><span style="font-size:11px">${l.obs}</span></div>`:''}
+    ${atr?`<div class="modal-row"><label>Dias em Atraso</label><span style="color:var(--red)">${diasAtraso(id)} dias</span></div>`:''}
+    ${debsLoja.length?`
+    <h4 style="font-family:var(--font);color:var(--red);font-size:12px;letter-spacing:1px;margin:12px 0 6px">&#9888; DEBITOS HISTORICOS</h4>
+    <table class="hist-table"><thead><tr><th>COMPETENCIA</th><th>VALOR</th><th>OBS</th></tr></thead>
+    <tbody>${debsLoja.map(d=>`<tr><td>${d.comp.split('-').reverse().join('/')}</td><td style="color:var(--red)">${fmt(d.valor)}</td><td style="color:var(--muted)">${d.obs||''}</td></tr>`).join('')}</tbody></table>
+    <div style="margin-top:6px;padding:7px;background:rgba(229,57,53,.1);border:1px solid var(--red);font-family:var(--font);font-size:13px;color:var(--red)">TOTAL EM DEBITO: ${fmt(totalDeb)}</div>`:''}
+    <h4 style="font-family:var(--font);color:var(--yellow);font-size:12px;letter-spacing:1px;margin:12px 0 6px">HISTORICO DE PAGAMENTOS</h4>
+    <table class="hist-table">
+      <thead><tr><th>MES</th><th>DATA</th><th>TOTAL</th><th>PAGO</th><th>SALDO</th><th>SIT.</th></tr></thead>
+      <tbody>${hist.length?hist.map(p=>{
+        const pago=Number(p.pago!==undefined?p.pago:p.valor),saldo=Number(p.valor)-pago;
+        const sit=p.cancelado?'<span style="color:var(--muted)">ESTORN.</span>':(saldo<=0?'<span style="color:var(--green)">QUIT.</span>':(pago>0?'<span style="color:var(--yellow)">PARC.</span>':'<span style="color:var(--red)">PEND.</span>'));
+        return`<tr style="${p.cancelado?'opacity:.4;text-decoration:line-through':''}"><td>${p.mes.split('-').reverse().join('/')}</td><td>${fmtData(p.data)}</td><td>${fmt(p.valor)}</td><td style="color:var(--green)">${fmt(pago)}</td><td style="color:${saldo>0?'var(--red)':'var(--muted)'}">${fmt(saldo)}</td><td>${sit}</td></tr>`;
+      }).join(''):'<tr><td colspan="6" style="color:var(--muted);text-align:center">Sem pagamentos</td></tr>'}</tbody>
+    </table>`:'<p style="color:var(--muted);text-align:center;padding:16px 0">Loja desocupada</p>'}
+  `;
+  document.getElementById('modal-loja').classList.add('show');
+}
+
+function fecharModal(id){document.getElementById(id).classList.remove('show');}
+['modal-loja','modal-parcial','modal-estorno','modal-edit-pag','modal-edit-desp'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)fecharModal(id);});
+});
+
+/* INIT */
+const h=new Date();
+document.getElementById('data-hoje').textContent=h.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
+initState();
+renderDash();
+</script>
+</body>
+</html>
