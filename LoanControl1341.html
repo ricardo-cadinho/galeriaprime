@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanControl – Sistema de Empréstimos</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#0D0D0D;--bg1:#161616;--bg2:#1E1E1E;--bg3:#272727;
+  --border:#333;--border2:#444;
+  --white:#F0F0F0;--muted:#888;--dim:#555;
+  --green:#00D46A;--green-bg:#002D16;--green-dim:#005C2D;
+  --red:#FF4444;--red-bg:#2D0000;--red-dim:#5C0000;
+  --yellow:#FFD600;--yellow-bg:#2D2200;--yellow-dim:#5C4400;
+  --blue:#4DA6FF;--blue-bg:#001A33;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--white);font-size:14px;min-height:100vh}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;min-width:220px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:10}
+.logo-area{padding:1.2rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon i{font-size:20px;color:#000}
+.logo-title{font-size:14px;font-weight:700;color:var(--white)}
+.logo-sub{font-size:11px;color:var(--green);margin-top:1px}
+.nav-section{font-size:10px;color:var(--dim);padding:14px 14px 5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;border-left:3px solid transparent;transition:all .15s;user-select:none}
+.nav-item:hover{background:var(--bg2);color:var(--white)}
+.nav-item.active{background:var(--bg2);color:var(--green);border-left-color:var(--green);font-weight:600}
+.nav-item i{font-size:18px}
+.sidebar-footer{margin-top:auto;padding:.9rem 1.1rem;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.main{flex:1;margin-left:220px;overflow-y:auto;background:var(--bg0);min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.6rem;border-bottom:1px solid var(--border);background:var(--bg1);gap:8px;position:sticky;top:0;z-index:5}
+.topbar-title{font-size:17px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 15px;border-radius:8px;border:1px solid var(--border2);background:var(--bg2);cursor:pointer;font-size:12px;color:var(--white);font-weight:600;transition:all .15s}
+.btn:hover{background:var(--bg3);border-color:var(--green)}
+.btn.primary{background:var(--green);color:#000;border-color:var(--green)}
+.btn.primary:hover{background:#00FF7A}
+.btn.warn{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-dim)}
+.btn.warn:hover{background:#3D2F00}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red-dim)}
+.btn.danger:hover{background:#400000}
+.btn.xs{padding:4px 9px;font-size:11px;gap:4px}
+.page{display:none;padding:1.6rem}
+.page.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
+.kpi{border-radius:10px;padding:1rem 1.1rem;border:1px solid}
+.kpi-label{font-size:11px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.04em}
+.kpi-value{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.kpi.green{background:var(--green-bg);border-color:var(--green-dim)}.kpi.green .kpi-label{color:var(--green)}.kpi.green .kpi-value{color:var(--green)}
+.kpi.red{background:var(--red-bg);border-color:var(--red-dim)}.kpi.red .kpi-label{color:var(--red)}.kpi.red .kpi-value{color:var(--red)}
+.kpi.yellow{background:var(--yellow-bg);border-color:var(--yellow-dim)}.kpi.yellow .kpi-label{color:var(--yellow)}.kpi.yellow .kpi-value{color:var(--yellow)}
+.kpi.blue{background:var(--blue-bg);border-color:#003366}.kpi.blue .kpi-label{color:var(--blue)}.kpi.blue .kpi-value{color:var(--blue)}
+.kpi.neutral{background:var(--bg2);border-color:var(--border)}.kpi.neutral .kpi-label{color:var(--muted)}.kpi.neutral .kpi-value{color:var(--white)}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.2rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.3rem;border-bottom:1px solid var(--border);background:var(--bg2)}
+.card-header h3{font-size:14px;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px}
+.card-body{padding:1.1rem 1.3rem}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:10px 12px;text-align:left;font-weight:700;color:var(--muted);background:var(--bg2);border-bottom:1px solid var(--border);white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+td{padding:10px 12px;color:var(--white);border-bottom:1px solid var(--border);font-size:12px}
+tbody tr:hover td{background:var(--bg2)}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.badge.aberto{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-dim)}
+.badge.pago{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim)}
+.badge.atrasado{background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim)}
+.badge.pendente{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-dim)}
+.alert-card{border-radius:10px;padding:.85rem 1rem;margin-bottom:.7rem;display:flex;align-items:flex-start;gap:12px}
+.alert-card.red{background:var(--red-bg);border:1px solid var(--red-dim)}
+.alert-card.yellow{background:var(--yellow-bg);border:1px solid var(--yellow-dim)}
+.alert-card.blue{background:var(--blue-bg);border:1px solid #003366}
+.alert-card i{font-size:19px;margin-top:1px;flex-shrink:0}
+.alert-card.red i,.alert-card.red .at{color:var(--red)}
+.alert-card.yellow i,.alert-card.yellow .at{color:var(--yellow)}
+.alert-card.blue i,.alert-card.blue .at{color:var(--blue)}
+.at{font-size:13px;font-weight:700}
+.as{font-size:12px;color:var(--muted);margin-top:2px}
+.venc-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.venc-row:last-child{border-bottom:none}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr}
+.form-row{margin-bottom:.7rem}
+.form-row label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--white);font-size:13px;font-family:inherit}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--green)}
+.form-row textarea{resize:vertical;min-height:60px}
+.form-row select option{background:var(--bg3)}
+.sec-title{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:1rem 0 .6rem;padding-bottom:.35rem;border-bottom:1px solid var(--green-dim)}
+.calc-box{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:.9rem 1rem;margin-top:.7rem}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.calc-row:last-child{border-bottom:none;padding-top:9px;font-size:16px;font-weight:800}
+.calc-row span:first-child{color:var(--muted);font-size:12px}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.cli-row{display:flex;align-items:center;gap:12px;padding:.9rem 0;border-bottom:1px solid var(--border)}
+.cli-row:last-child{border-bottom:none}
+.tab-row{display:flex;border-bottom:1px solid var(--border);background:var(--bg1);padding:0 1rem}
+.tab-btn{padding:10px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+.tab-btn:hover{color:var(--white)}
+.sub-page{display:none;padding:1rem}
+.sub-page.active{display:block}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.empty-state i{font-size:44px;display:block;margin-bottom:.85rem;color:var(--border2)}
+.empty-state p{font-size:13px;line-height:1.7}
+.parc-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem 0;border-bottom:1px solid var(--border);font-size:12px;gap:8px}
+.parc-row:last-child{border-bottom:none}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg1);border:1px solid var(--border2);border-radius:14px;padding:1.7rem;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;color:var(--white);margin-bottom:1.1rem;display:flex;align-items:center;gap:8px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:1.2rem;padding-top:.9rem;border-top:1px solid var(--border)}
+.confirm-box{background:var(--red-bg);border:1px solid var(--red-dim);border-radius:10px;padding:1.1rem;margin-bottom:1rem;text-align:center}
+.confirm-box p{color:var(--red);font-weight:700;font-size:14px;margin-bottom:.4rem}
+.confirm-box small{color:var(--muted);font-size:12px}
+.warn-box{background:var(--yellow-bg);border:1px solid var(--yellow-dim);border-radius:10px;padding:.85rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.warn-box i{color:var(--yellow);font-size:20px;flex-shrink:0}
+.warn-box p{color:var(--yellow);font-size:13px;font-weight:600}
+.save-toast{position:fixed;bottom:24px;right:24px;background:var(--green-bg);border:1px solid var(--green-dim);color:var(--green);font-size:13px;font-weight:700;padding:.6rem 1.1rem;border-radius:8px;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(10px);transition:all .3s;z-index:9999;pointer-events:none}
+.save-toast.show{opacity:1;transform:translateY(0)}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg0)}
+.login-card{width:350px;background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:2.3rem}
+@media(max-width:700px){
+  .sidebar{width:200px}
+  .main{margin-left:200px}
+  .form-grid.three{grid-template-columns:1fr 1fr}
+  table{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:1.8rem">
+      <div style="width:56px;height:56px;background:var(--green);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto .9rem"><i class="ti ti-building-bank" style="font-size:30px;color:#000"></i></div>
+      <div style="font-size:22px;font-weight:800;color:var(--white)">LoanControl</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px">Sistema de Empréstimos</div>
+    </div>
+    <div class="form-row"><label>Usuário</label><input type="text" id="l-user" value="admin" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-row"><label>Senha</label><input type="password" id="l-pass" value="1234" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn primary" style="width:100%;justify-content:center;padding:10px;margin-top:.5rem" onclick="doLogin()"><i class="ti ti-login"></i> Entrar no sistema</button>
+    <div style="text-align:center;margin-top:.85rem;font-size:12px;color:var(--dim)">Usuário: admin · Senha: 1234</div>
+  </div>
+</div>
+
+<div id="main-app" style="display:none" class="app">
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="ti ti-building-bank"></i></div>
+      <div><div class="logo-title">LoanControl</div><div class="logo-sub">Administrador</div></div>
+    </div>
+    <div style="padding:.4rem 0;flex:1;overflow-y:auto">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-home"></i> Dashboard</div>
+      <div class="nav-item" onclick="nav('emprestimos')"><i class="ti ti-file-dollar"></i> Empréstimos</div>
+      <div class="nav-item" onclick="nav('clientes')"><i class="ti ti-users"></i> Clientes</div>
+      <div class="nav-item" onclick="nav('parcelas')"><i class="ti ti-calendar-due"></i> Parcelas</div>
+      <div class="nav-section">Ferramentas</div>
+      <div class="nav-item" onclick="nav('calculadora')"><i class="ti ti-calculator"></i> Calculadora</div>
+      <div class="nav-item" onclick="nav('relatorios')"><i class="ti ti-chart-bar"></i> Relatórios</div>
+    </div>
+    <div class="sidebar-footer">
+      <div id="sidebar-date" style="margin-bottom:6px;font-weight:600;color:var(--white)"></div>
+      <div style="cursor:pointer;display:flex;align-items:center;gap:6px" onclick="doLogout()"><i class="ti ti-logout"></i> Sair</div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="pg-dashboard" class="page active">
+      <div class="topbar"><span class="topbar-title"><i class="ti ti-home" style="color:var(--green)"></i> Dashboard</span>
+        <button class="btn primary" onclick="nav('emprestimos');setTimeout(abrirNovoEmp,80)"><i class="ti ti-plus"></i> Novo Empréstimo</button>
+      </div>
+      <div class="kpis" id="d-kpis" style="margin-top:.2rem"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem">
+        <div class="card"><div class="card-header"><h3><i class="ti ti-alert-triangle" style="color:var(--yellow)"></i> Alertas</h3></div><div style="padding:.75rem 1.2rem" id="d-alertas"></div></div>
+        <div class="card"><div class="card-header"><h3><i class="ti ti-calendar-event" style="color:var(--blue)"></i> Próximos vencimentos</h3></div><div style="padding:.5rem 1.2rem" id="d-venc"></div></div>
+      </div>
+    </div>
+
+    <!-- EMPRÉSTIMOS -->
+    <div id="pg-emprestimos" class="page">
+      <div class="topbar"><span class="topbar-title"><i class="ti ti-file-dollar" style="color:var(--green)"></i> Empréstimos</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="emp-busca" placeholder="Buscar cliente..." style="padding:7px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:170px;background:var(--bg2);color:var(--white)" oninput="renderEmpTab()">
+          <select id="emp-filtro" onchange="renderEmpTab()" style="padding:7px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;background:var(--bg2);color:var(--white)">
+            <option value="">Todos</option><option>Em Aberto</option><option>Atrasado</option><option>Pago</option>
+          </select>
+          <button class="btn primary" onclick="abrirNovoEmp()"><i class="ti ti-plus"></i> Novo</button>
+        </div>
+      </div>
+      <div style="padding:1.6rem"><div class="card" style="margin:0"><div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Cliente</th><th>Data</th><th>Valor</th><th>Taxa</th><th>Vencimento</th><th>Juros Acum.</th><th>Total</th><th>Pago</th><th>Saldo</th><th>Situação</th><th>Ações</th></tr></thead>
+          <tbody id="emp-tbody"></tbody>
+        </table>
+      </div></div></div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div id="pg-clientes" class="page">
+      <div class="topbar"><span class="topbar-title"><i class="ti ti-users" style="color:var(--green)"></i> Clientes</span>
+        <button class="btn primary" onclick="abrirNovoCli()"><i class="ti ti-plus"></i> Novo Cliente</button>
+      </div>
+      <div style="padding:1.6rem"><div class="card" style="margin:0">
+        <div class="card-header">
+          <h3><i class="ti ti-users" style="color:var(--green)"></i> Clientes cadastrados <span id="cli-count" style="color:var(--muted);font-weight:400;font-size:12px"></span></h3>
+          <input type="text" id="cli-busca" placeholder="Buscar nome ou CPF..." oninput="renderClientes(this.value)" style="padding:7px 12px;border:1px solid var(--border2);border-radius:8px;font-size:12px;width:200px;background:var(--bg2);color:var(--white)">
+        </div>
+        <div style="padding:.4rem 1.3rem" id="cli-lista"></div>
+      </div></div>
+    </div>
+
+    <!-- PARCELAS -->
+    <div id="pg-parcelas" class="page">
+      <div class="topbar"><span class="topbar-title"><i class="ti ti-calendar-due" style="color:var(--green)"></i> Controle de Parcelas</span></div>
+      <div style="padding:1.6rem" id="parc-content"></div>
+    </div>
+
+    <!-- CALCULADORA -->
+    <div id="pg-calculadora" class="page">
+      <div class="topbar"><span class="topbar-title"><i class="ti ti-calculator" style="color:var(--green)"></i> Calculadora</span></div>
+      <div style="padding:1.6rem;max-width:520px"><div class="card" style="margin:0">
+        <div class="card-header"><h3><i class="ti ti-calculator" style="color:var(--green)"></i> Simulação de empréstimo</h3></div>
+        <div class="card-body">
+          <div class="form-grid"><div class="form-row"><label>Valor (R$)</label><input type="number" id="cal-valor" placeholder="0,00" oninput="calcCalc()"></div><div class="form-row"><label>Taxa mensal (%)</label><input type="number" id="cal-taxa" value="10" oninput="calcCalc()"></div></div>
+          <div class="form-grid"><div class="form-row"><label>Prazo (meses)</label><input type="number" id="cal-prazo" value="1" min="1" oninput="calcCalc()"></div><div class="form-row"><label>Parcelas</label><select id="cal-parc" onchange="calcCalc()"><option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option><option value="6">6x</option><option value="12">12x</option></select></div></div>
+          <div class="sec-title">Resultado</div>
+          <div class="calc-box">
+            <div class="calc-row"><span>Juros mensais</span><span style="color:var(--yellow);font-weight:700" id="cal-jmes">R$ 0,00</span></div>
+            <div class="calc-row"><span>Juros diários (atraso)</span><span style="color:var(--yellow)" id="cal-jdia">R$ 0,00/dia</span></div>
+            <div class="calc-row"><span>Total de juros</span><span style="color:var(--yellow)" id="cal-jtot">R$ 0,00</span></div>
+            <div class="calc-row"><span>Valor da parcela</span><span style="color:var(--white);font-weight:700" id="cal-vparc">—</span></div>
+            <div class="calc-row"><span>Total a receber</span><span style="color:var(--green)" id="cal-total">R$ 0,00</span></div>
+          </div>
+          <div id="cal-tabela" style="margin-top:1rem"></div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div id="pg-relatorios" class="page">
+      <div class="topbar"><span class="topbar-title"><i class="ti ti-chart-bar" style="color:var(--green)"></i> Relatórios</span></div>
+      <div style="padding:1.6rem">
+        <div class="tab-row"><button class="tab-btn active" onclick="relTab('ativos')"><i class="ti ti-file-dollar"></i> Ativos</button><button class="tab-btn" onclick="relTab('quitados')"><i class="ti ti-check"></i> Quitados</button><button class="tab-btn" onclick="relTab('atraso')"><i class="ti ti-alert-circle"></i> Em atraso</button><button class="tab-btn" onclick="relTab('juros')"><i class="ti ti-coin"></i> Pagamentos</button></div>
+        <div id="rel-ativos" class="sub-page active" style="background:var(--bg1);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px"></div>
+        <div id="rel-quitados" class="sub-page" style="background:var(--bg1);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px"></div>
+        <div id="rel-atraso" class="sub-page" style="background:var(--bg1);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px"></div>
+        <div id="rel-juros" class="sub-page" style="background:var(--bg1);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAIS -->
+<div class="modal-overlay" id="modal-emp">
+  <div class="modal">
+    <h3 id="modal-emp-title"><i class="ti ti-file-dollar" style="color:var(--green)"></i> Novo Empréstimo</h3>
+    <input type="hidden" id="me-id">
+    <div class="form-grid"><div class="form-row"><label>Cliente *</label><select id="me-cliente"><option value="">Selecione...</option></select></div><div class="form-row"><label>Forma de pagamento</label><select id="me-forma"><option>Dinheiro</option><option>PIX</option><option>TED</option><option>Cheque</option></select></div></div>
+    <div class="form-grid three"><div class="form-row"><label>Data *</label><input type="date" id="me-data"></div><div class="form-row"><label>Valor (R$) *</label><input type="number" id="me-valor" placeholder="0,00" oninput="calcPreview()"></div><div class="form-row"><label>Taxa mensal (%) *</label><input type="number" id="me-taxa" value="10" oninput="calcPreview()"></div></div>
+    <div class="form-grid three"><div class="form-row"><label>Vencimento *</label><input type="date" id="me-venc"></div><div class="form-row"><label>Parcelas</label><select id="me-parc" onchange="calcPreview()"><option value="1">À vista</option><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="6">6x</option><option value="12">12x</option></select></div><div class="form-row"><label>Status</label><select id="me-status"><option>Em Aberto</option><option>Atrasado</option><option>Pago</option></select></div></div>
+    <div class="form-row"><label>Observações</label><input type="text" id="me-obs" placeholder="opcional"></div>
+    <div id="me-preview" style="display:none" class="calc-box">
+      <div class="calc-row"><span>Juros mensais</span><span style="color:var(--yellow);font-weight:700" id="me-jmes"></span></div>
+      <div class="calc-row"><span>Juros diários</span><span style="color:var(--yellow)" id="me-jdia"></span></div>
+      <div id="me-parc-row" class="calc-row" style="display:none"><span id="me-parc-label"></span><span style="color:var(--white);font-weight:700" id="me-parc-val"></span></div>
+      <div class="calc-row"><span>Total a receber</span><span style="color:var(--green)" id="me-total"></span></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="fecharModal('modal-emp')">Cancelar</button><button class="btn primary" onclick="salvarEmp()"><i class="ti ti-check"></i> Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-del">
+  <div class="modal" style="max-width:400px">
+    <h3><i class="ti ti-trash" style="color:var(--red)"></i> Confirmar exclusão</h3>
+    <div class="confirm-box"><p id="del-msg"></p><small>Esta ação não pode ser desfeita.</small></div>
+    <div id="del-warn" style="display:none" class="warn-box"><i class="ti ti-alert-triangle"></i><p id="del-warn-msg"></p></div>
+    <div class="modal-footer"><button class="btn" onclick="fecharModal('modal-del')">Cancelar</button><button class="btn danger" id="del-btn"><i class="ti ti-trash"></i> Excluir</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-cli">
+  <div class="modal">
+    <h3 id="modal-cli-title"><i class="ti ti-user" style="color:var(--green)"></i> Novo Cliente</h3>
+    <input type="hidden" id="mc-id">
+    <div class="sec-title">Dados pessoais</div>
+    <div class="form-grid three"><div class="form-row"><label>Nome completo *</label><input type="text" id="mc-nome"></div><div class="form-row"><label>CPF</label><input type="text" id="mc-cpf" placeholder="000.000.000-00"></div><div class="form-row"><label>RG</label><input type="text" id="mc-rg"></div></div>
+    <div class="form-grid three"><div class="form-row"><label>Nascimento</label><input type="date" id="mc-nasc"></div><div class="form-row"><label>Telefone</label><input type="text" id="mc-tel" placeholder="(00) 00000-0000"></div><div class="form-row"><label>WhatsApp</label><input type="text" id="mc-wapp" placeholder="(00) 00000-0000"></div></div>
+    <div class="form-grid"><div class="form-row"><label>E-mail</label><input type="email" id="mc-email"></div><div class="form-row"><label>Endereço</label><input type="text" id="mc-end"></div></div>
+    <div class="form-row"><label>Observações</label><textarea id="mc-obs"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="fecharModal('modal-cli')">Cancelar</button><button class="btn primary" onclick="salvarCliente()"><i class="ti ti-check"></i> Salvar Cliente</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-parc">
+  <div class="modal" style="max-width:400px">
+    <h3><i class="ti ti-edit" style="color:var(--yellow)"></i> Editar Parcela</h3>
+    <input type="hidden" id="mp-empid"><input type="hidden" id="mp-idx">
+    <div class="form-grid"><div class="form-row"><label>Vencimento</label><input type="date" id="mp-venc"></div><div class="form-row"><label>Valor (R$)</label><input type="number" id="mp-valor" step="0.01"></div></div>
+    <div class="form-row"><label>Status</label><select id="mp-status"><option>Pendente</option><option>Pago</option><option>Atrasado</option><option>Renegociado</option></select></div>
+    <div class="form-row"><label>Observações</label><input type="text" id="mp-obs"></div>
+    <div class="modal-footer"><button class="btn" onclick="fecharModal('modal-parc')">Cancelar</button><button class="btn primary" onclick="salvarParcela()"><i class="ti ti-check"></i> Salvar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pag">
+  <div class="modal" style="max-width:420px">
+    <h3 id="modal-pag-title"><i class="ti ti-cash" style="color:var(--green)"></i> Registrar Pagamento</h3>
+    <input type="hidden" id="mpag-empid"><input type="hidden" id="mpag-idx">
+    <div class="form-grid"><div class="form-row"><label>Data</label><input type="date" id="mpag-data"></div><div class="form-row"><label>Valor (R$)</label><input type="number" id="mpag-valor" step="0.01"></div></div>
+    <div class="form-grid"><div class="form-row"><label>Forma</label><select id="mpag-forma"><option>Dinheiro</option><option>PIX</option><option>TED</option><option>Cheque</option></select></div><div class="form-row"><label>Referência</label><input type="text" id="mpag-ref" placeholder="Ex: Jun/2025"></div></div>
+    <div class="form-row"><label>Observações</label><input type="text" id="mpag-obs"></div>
+    <div class="modal-footer"><button class="btn" onclick="fecharModal('modal-pag')">Cancelar</button><button class="btn primary" onclick="salvarPagamento()"><i class="ti ti-check"></i> Confirmar</button></div>
+  </div>
+</div>
+
+<div class="save-toast" id="toast"><i class="ti ti-device-floppy"></i> Dados salvos com sucesso</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  PERSISTÊNCIA — localStorage do navegador
+//  Os dados ficam gravados no computador permanentemente
+// ═══════════════════════════════════════════════════════════
+const LS_KEY = 'loancontrol_dados_v2';
+
+function carregarDB() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { clientes:[], emprestimos:[], parcelasExtra:{}, nextCli:1, nextEmp:1 };
+}
+
+function salvarDB() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(db));
+    mostrarToast();
+  } catch(e) {
+    alert('Erro ao salvar dados: ' + e.message);
+  }
+}
+
+let toastTimer;
+function mostrarToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+let db = carregarDB();
+// ═══════════════════════════════════════════════════════════
+
+const brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD = s => { if(!s) return '—'; const [y,m,d] = s.split('-'); return `${d}/${m}/${y}`; };
+const todayStr = () => new Date().toISOString().split('T')[0];
+const hoje = new Date(); hoje.setHours(0,0,0,0);
+const diffD = dt => { const d = new Date(dt+'T00:00:00'); return Math.floor((hoje-d)/86400000); };
+const initials = n => n.trim().split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || '?';
+const AVC = ['#005C2D','#003366','#5C0000','#44337A','#5C4400','#2C5C4C','#1A4040','#4C1A00'];
+
+function calcEmp(e) {
+  const dias = Math.max(0, diffD(e.data));
+  const jDia = e.valor * (e.taxa/100) / 30;
+  const jAcum = jDia * dias;
+  const total = e.valor + jAcum;
+  const pago = (e.pagamentos||[]).reduce((s,p)=>s+Number(p.valor), 0);
+  const saldo = Math.max(0, total - pago);
+  const vencDate = new Date(e.venc+'T00:00:00');
+  let sit = e.statusManual || 'Em Aberto';
+  if (!e.statusManual) {
+    if (pago >= total*0.999) sit = 'Pago';
+    else if (hoje > vencDate) sit = 'Atrasado';
+  }
+  return { dias, jDia, jAcum, total, pago, saldo, sit };
+}
+
+function getCli(id) { return db.clientes.find(c=>c.id===id) || {nome:'(removido)'}; }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+
+function doLogin() {
+  const u = document.getElementById('l-user').value;
+  const p = document.getElementById('l-pass').value;
+  if (u==='admin' && p==='1234') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    db = carregarDB(); // recarrega sempre ao entrar
+    renderAll();
+  } else {
+    alert('Usuário ou senha incorretos.');
+  }
+}
+
+function doLogout() {
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function nav(pg) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pg-'+pg).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if ((n.getAttribute('onclick')||'').includes("'"+pg+"'")) n.classList.add('active');
+  });
+  const fns = {
+    dashboard: renderDash,
+    emprestimos: renderEmpTab,
+    clientes: () => renderClientes(''),
+    parcelas: renderParcelas,
+    relatorios: () => renderRel('ativos'),
+    calculadora: calcCalc
+  };
+  if (fns[pg]) fns[pg]();
+}
+
+function renderAll() {
+  document.getElementById('sidebar-date').textContent =
+    hoje.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'short'});
+  renderDash();
+}
+
+function renderDash() {
+  const emps = db.emprestimos;
+  const ativos = emps.filter(e=>calcEmp(e).sit!=='Pago');
+  const totEmp = ativos.reduce((s,e)=>s+e.valor, 0);
+  const totJuros = ativos.reduce((s,e)=>s+calcEmp(e).jAcum, 0);
+  const totPago = emps.reduce((s,e)=>s+calcEmp(e).pago, 0);
+  const totAtraso = emps.filter(e=>calcEmp(e).sit==='Atrasado').reduce((s,e)=>s+calcEmp(e).saldo, 0);
+  const qAtraso = emps.filter(e=>calcEmp(e).sit==='Atrasado').length;
+
+  document.getElementById('d-kpis').innerHTML = `
+    <div class="kpi blue"><div class="kpi-label"><i class="ti ti-coin"></i> Capital ativo</div><div class="kpi-value">${brl(totEmp)}</div></div>
+    <div class="kpi yellow"><div class="kpi-label"><i class="ti ti-trending-up"></i> Juros acumulados</div><div class="kpi-value">${brl(totJuros)}</div></div>
+    <div class="kpi green"><div class="kpi-label"><i class="ti ti-check"></i> Total recebido</div><div class="kpi-value">${brl(totPago)}</div></div>
+    <div class="kpi red"><div class="kpi-label"><i class="ti ti-alert-circle"></i> Em atraso</div><div class="kpi-value">${brl(totAtraso)}</div></div>
+    <div class="kpi neutral"><div class="kpi-label"><i class="ti ti-file-dollar"></i> Contratos ativos</div><div class="kpi-value">${ativos.length}</div></div>
+    <div class="kpi ${qAtraso>0?'red':'neutral'}"><div class="kpi-label"><i class="ti ti-clock"></i> Em atraso</div><div class="kpi-value">${qAtraso}</div></div>`;
+
+  const alertas = [];
+  emps.forEach(e => {
+    const c = calcEmp(e); const cli = getCli(e.clienteId);
+    if (c.sit==='Atrasado') alertas.push({t:'red',ic:'ti-alert-circle',tit:`${cli.nome} — ${c.dias}d em atraso`,sub:`Saldo: ${brl(c.saldo)}`});
+    else {
+      const dV = diffD(e.venc);
+      if (dV===0) alertas.push({t:'yellow',ic:'ti-alarm',tit:`${cli.nome} — vence HOJE`,sub:`Total: ${brl(c.saldo)}`});
+      else if (dV<0 && dV>=-7) alertas.push({t:'blue',ic:'ti-calendar-event',tit:`${cli.nome} — vence em ${Math.abs(dV)}d`,sub:`Total: ${brl(c.saldo)}`});
+    }
+  });
+  document.getElementById('d-alertas').innerHTML = alertas.length
+    ? alertas.map(a=>`<div class="alert-card ${a.t}"><i class="ti ${a.ic}"></i><div><div class="at">${a.tit}</div><div class="as">${a.sub}</div></div></div>`).join('')
+    : '<div style="text-align:center;padding:1.5rem;color:var(--green)"><i class="ti ti-circle-check" style="font-size:32px"></i><div style="margin-top:8px;font-weight:600">Tudo em ordem</div></div>';
+
+  const prox = emps.filter(e=>calcEmp(e).sit!=='Pago').sort((a,b)=>a.venc.localeCompare(b.venc)).slice(0,6);
+  document.getElementById('d-venc').innerHTML = prox.length
+    ? prox.map(e => {
+        const c=calcEmp(e); const cli=getCli(e.clienteId); const dv=diffD(e.venc);
+        const cor = dv>0?'var(--red)':dv===0?'var(--yellow)':'var(--blue)';
+        return `<div class="venc-row"><div><div style="font-weight:700;font-size:13px">${cli.nome}</div><div style="color:var(--muted);font-size:11px">${fmtD(e.venc)}</div></div><div style="text-align:right"><div style="font-weight:700;color:var(--green)">${brl(c.saldo)}</div><div style="font-size:11px;font-weight:700;color:${cor}">${dv>0?dv+'d atraso':dv===0?'Hoje':Math.abs(dv)+'d'}</div></div></div>`;
+      }).join('')
+    : '<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Nenhum vencimento pendente</p></div>';
+}
+
+function renderEmpTab() {
+  const busca = (document.getElementById('emp-busca').value||'').toLowerCase();
+  const filtro = document.getElementById('emp-filtro').value;
+  const lista = db.emprestimos.filter(e => {
+    const cli=getCli(e.clienteId); const c=calcEmp(e);
+    return cli.nome.toLowerCase().includes(busca) && (!filtro||c.sit===filtro);
+  });
+  const tbody = document.getElementById('emp-tbody');
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><i class="ti ti-file-off"></i><p>${db.emprestimos.length===0?'Nenhum empréstimo cadastrado ainda.<br>Clique em <strong style="color:var(--green)">Novo</strong> para começar.':'Nenhum resultado para este filtro.'}</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lista.map(e => {
+    const c=calcEmp(e); const cli=getCli(e.clienteId);
+    const bc = c.sit==='Pago'?'pago':c.sit==='Atrasado'?'atrasado':'aberto';
+    const sCor = c.sit==='Pago'?'var(--green)':c.sit==='Atrasado'?'var(--red)':'var(--white)';
+    return `<tr>
+      <td style="font-weight:700">${cli.nome}</td>
+      <td style="color:var(--muted)">${fmtD(e.data)}</td>
+      <td style="font-weight:600">${brl(e.valor)}</td>
+      <td style="color:var(--yellow)">${e.taxa}%</td>
+      <td style="color:var(--muted)">${fmtD(e.venc)}</td>
+      <td style="color:var(--yellow)">${brl(c.jAcum)}</td>
+      <td style="font-weight:700">${brl(c.total)}</td>
+      <td style="color:var(--green);font-weight:700">${brl(c.pago)}</td>
+      <td style="color:${sCor};font-weight:800">${brl(c.saldo)}</td>
+      <td><span class="badge ${bc}">${c.sit}</span></td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn xs warn" onclick="editarEmp(${e.id})"><i class="ti ti-edit"></i></button>
+        <button class="btn xs" onclick="abrirPagamento(${e.id})" style="color:var(--green);border-color:var(--green-dim);background:var(--green-bg)"><i class="ti ti-cash"></i></button>
+        <button class="btn xs danger" onclick="confirmarDelEmp(${e.id})"><i class="ti ti-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirNovoEmp() {
+  if (db.clientes.length===0) { alert('Cadastre pelo menos um cliente antes de criar um empréstimo.'); nav('clientes'); return; }
+  document.getElementById('modal-emp-title').innerHTML = '<i class="ti ti-file-dollar" style="color:var(--green)"></i> Novo Empréstimo';
+  document.getElementById('me-id').value = '';
+  const sel = document.getElementById('me-cliente');
+  sel.innerHTML = '<option value="">Selecione...</option>' + db.clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  ['me-data','me-venc'].forEach(id=>document.getElementById(id).value=todayStr());
+  ['me-valor','me-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('me-taxa').value=10; document.getElementById('me-parc').value=1; document.getElementById('me-status').value='Em Aberto';
+  document.getElementById('me-preview').style.display='none';
+  abrirModal('modal-emp');
+}
+
+function editarEmp(id) {
+  const e = db.emprestimos.find(x=>x.id===id); if(!e) return;
+  document.getElementById('modal-emp-title').innerHTML = '<i class="ti ti-edit" style="color:var(--yellow)"></i> Editar Empréstimo';
+  document.getElementById('me-id').value = id;
+  const sel = document.getElementById('me-cliente');
+  sel.innerHTML = '<option value="">Selecione...</option>' + db.clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  document.getElementById('me-cliente').value = e.clienteId;
+  document.getElementById('me-data').value = e.data;
+  document.getElementById('me-venc').value = e.venc;
+  document.getElementById('me-valor').value = e.valor;
+  document.getElementById('me-taxa').value = e.taxa;
+  document.getElementById('me-forma').value = e.forma;
+  document.getElementById('me-obs').value = e.obs||'';
+  document.getElementById('me-parc').value = e.parcelas||1;
+  document.getElementById('me-status').value = e.statusManual||'Em Aberto';
+  calcPreview(); abrirModal('modal-emp');
+}
+
+function calcPreview() {
+  const v=parseFloat(document.getElementById('me-valor').value)||0;
+  const t=parseFloat(document.getElementById('me-taxa').value)||0;
+  const np=parseInt(document.getElementById('me-parc').value)||1;
+  if (!v) { document.getElementById('me-preview').style.display='none'; return; }
+  const jMes=v*t/100, jDia=jMes/30, total=v+jMes;
+  document.getElementById('me-jmes').textContent=brl(jMes);
+  document.getElementById('me-jdia').textContent=brl(jDia)+'/dia';
+  document.getElementById('me-total').textContent=brl(total);
+  const pr=document.getElementById('me-parc-row');
+  if(np>1){pr.style.display='flex';document.getElementById('me-parc-label').textContent=`Parcela (${np}x)`;document.getElementById('me-parc-val').textContent=brl(total/np);}
+  else pr.style.display='none';
+  document.getElementById('me-preview').style.display='block';
+}
+
+function salvarEmp() {
+  const cid=parseInt(document.getElementById('me-cliente').value);
+  const data=document.getElementById('me-data').value, venc=document.getElementById('me-venc').value;
+  const valor=parseFloat(document.getElementById('me-valor').value), taxa=parseFloat(document.getElementById('me-taxa').value);
+  const forma=document.getElementById('me-forma').value, obs=document.getElementById('me-obs').value;
+  const parcelas=parseInt(document.getElementById('me-parc').value)||1;
+  const statusManual=document.getElementById('me-status').value==='Em Aberto'?'':document.getElementById('me-status').value;
+  if(!cid||!data||!venc||!valor||!taxa){alert('Preencha todos os campos obrigatórios.');return;}
+  const eid=document.getElementById('me-id').value;
+  if(eid){const e=db.emprestimos.find(x=>x.id===parseInt(eid));if(e)Object.assign(e,{clienteId:cid,data,valor,taxa,venc,forma,obs,parcelas,statusManual});}
+  else db.emprestimos.push({id:db.nextEmp++,clienteId:cid,data,valor,taxa,venc,forma,obs,parcelas,statusManual,pagamentos:[]});
+  salvarDB(); fecharModal('modal-emp'); renderEmpTab(); renderDash();
+}
+
+function abrirPagamento(empId) {
+  document.getElementById('mpag-empid').value=empId; document.getElementById('mpag-idx').value='';
+  document.getElementById('modal-pag-title').innerHTML='<i class="ti ti-cash" style="color:var(--green)"></i> Registrar Pagamento';
+  document.getElementById('mpag-data').value=todayStr();
+  ['mpag-valor','mpag-ref','mpag-obs'].forEach(id=>document.getElementById(id).value='');
+  abrirModal('modal-pag');
+}
+
+function salvarPagamento() {
+  const empId=parseInt(document.getElementById('mpag-empid').value);
+  const pi=document.getElementById('mpag-idx').value;
+  const data=document.getElementById('mpag-data').value, valor=parseFloat(document.getElementById('mpag-valor').value);
+  const forma=document.getElementById('mpag-forma').value, ref=document.getElementById('mpag-ref').value, obs=document.getElementById('mpag-obs').value;
+  if(!data||!valor){alert('Informe data e valor.');return;}
+  const e=db.emprestimos.find(x=>x.id===empId); if(!e) return;
+  if(pi!=='') e.pagamentos[parseInt(pi)]={data,valor,forma,ref,obs};
+  else e.pagamentos.push({data,valor,forma,ref,obs});
+  salvarDB(); fecharModal('modal-pag'); renderEmpTab(); renderDash();
+}
+
+function renderClientes(busca) {
+  const lista = db.clientes.filter(c =>
+    c.nome.toLowerCase().includes((busca||'').toLowerCase()) ||
+    (c.cpf||'').includes(busca||'')
+  );
+  const el = document.getElementById('cli-lista');
+  document.getElementById('cli-count').textContent = `(${db.clientes.length})`;
+  if (db.clientes.length===0) {
+    el.innerHTML = `<div class="empty-state"><i class="ti ti-user-off"></i><p>Nenhum cliente cadastrado.<br>Clique em <strong style="color:var(--green)">Novo Cliente</strong> para começar.</p></div>`;
+    return;
+  }
+  if (!lista.length) { el.innerHTML='<div class="empty-state"><i class="ti ti-search-off"></i><p>Nenhum cliente encontrado.</p></div>'; return; }
+  el.innerHTML = lista.map((c,i) => {
+    const emps = db.emprestimos.filter(e=>e.clienteId===c.id);
+    const totEmp = emps.reduce((s,e)=>s+e.valor, 0);
+    const sit = emps.some(e=>calcEmp(e).sit==='Atrasado')?'atrasado':emps.some(e=>calcEmp(e).sit==='Em Aberto')?'aberto':emps.length>0?'pago':'';
+    return `<div class="cli-row">
+      <div class="avatar" style="background:${AVC[i%AVC.length]}">${initials(c.nome)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px">${c.nome}</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:2px">${c.cpf?'CPF: '+c.cpf+' · ':''} ${c.tel||''} ${c.email?' · '+c.email:''}</div>
+        <div style="color:var(--dim);font-size:11px;margin-top:1px">${c.end||''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-right:12px">
+        ${emps.length>0?`<div style="font-size:15px;font-weight:800">${brl(totEmp)}</div><div style="margin-top:5px"><span class="badge ${sit}">${sit==='aberto'?'Em aberto':sit==='atrasado'?'Inadimplente':'Quitado'}</span></div>`:`<div style="font-size:11px;color:var(--dim)">Sem empréstimos</div>`}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <button class="btn xs warn" onclick="editarCliente(${c.id})"><i class="ti ti-edit"></i> Editar</button>
+        <button class="btn xs danger" onclick="confirmarDelCli(${c.id})"><i class="ti ti-trash"></i> Excluir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirNovoCli() {
+  document.getElementById('modal-cli-title').innerHTML = '<i class="ti ti-user-plus" style="color:var(--green)"></i> Novo Cliente';
+  document.getElementById('mc-id').value = '';
+  ['mc-nome','mc-cpf','mc-rg','mc-tel','mc-wapp','mc-email','mc-end','mc-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mc-nasc').value='';
+  abrirModal('modal-cli');
+}
+
+function editarCliente(id) {
+  const c = db.clientes.find(x=>x.id===id); if(!c) return;
+  document.getElementById('modal-cli-title').innerHTML = '<i class="ti ti-edit" style="color:var(--yellow)"></i> Editar Cliente';
+  document.getElementById('mc-id').value = id;
+  document.getElementById('mc-nome').value=c.nome||''; document.getElementById('mc-cpf').value=c.cpf||'';
+  document.getElementById('mc-rg').value=c.rg||''; document.getElementById('mc-tel').value=c.tel||'';
+  document.getElementById('mc-wapp').value=c.wapp||''; document.getElementById('mc-email').value=c.email||'';
+  document.getElementById('mc-end').value=c.end||''; document.getElementById('mc-nasc').value=c.nasc||'';
+  document.getElementById('mc-obs').value=c.obs||'';
+  abrirModal('modal-cli');
+}
+
+function salvarCliente() {
+  const nome = document.getElementById('mc-nome').value.trim();
+  if (!nome) { alert('Informe o nome do cliente.'); return; }
+  const dados = {
+    nome, cpf:document.getElementById('mc-cpf').value, rg:document.getElementById('mc-rg').value,
+    tel:document.getElementById('mc-tel').value, wapp:document.getElementById('mc-wapp').value,
+    email:document.getElementById('mc-email').value, end:document.getElementById('mc-end').value,
+    nasc:document.getElementById('mc-nasc').value, obs:document.getElementById('mc-obs').value
+  };
+  const cid = document.getElementById('mc-id').value;
+  if (cid) { const c=db.clientes.find(x=>x.id===parseInt(cid)); if(c) Object.assign(c,dados); }
+  else db.clientes.push({id:db.nextCli++, ...dados});
+  salvarDB();
+  fecharModal('modal-cli');
+  renderClientes(document.getElementById('cli-busca').value||'');
+}
+
+function confirmarDelCli(id) {
+  const c = db.clientes.find(x=>x.id===id); if(!c) return;
+  const emps = db.emprestimos.filter(e=>e.clienteId===id);
+  document.getElementById('del-msg').textContent = `Excluir cliente "${c.nome}"?`;
+  const warnEl = document.getElementById('del-warn');
+  if (emps.length>0) { warnEl.style.display='flex'; document.getElementById('del-warn-msg').textContent=`Este cliente possui ${emps.length} empréstimo(s). Todos serão excluídos junto.`; }
+  else warnEl.style.display='none';
+  document.getElementById('del-btn').onclick = () => {
+    db.emprestimos = db.emprestimos.filter(e=>e.clienteId!==id);
+    db.clientes = db.clientes.filter(x=>x.id!==id);
+    salvarDB(); fecharModal('modal-del');
+    renderClientes(document.getElementById('cli-busca').value||''); renderDash();
+  };
+  abrirModal('modal-del');
+}
+
+function confirmarDelEmp(id) {
+  const e = db.emprestimos.find(x=>x.id===id); const cli = e?getCli(e.clienteId):{nome:''};
+  document.getElementById('del-msg').textContent = `Excluir empréstimo de "${cli.nome}"?`;
+  document.getElementById('del-warn').style.display='none';
+  document.getElementById('del-btn').onclick = () => {
+    db.emprestimos = db.emprestimos.filter(x=>x.id!==id);
+    salvarDB(); fecharModal('modal-del'); renderEmpTab(); renderDash();
+  };
+  abrirModal('modal-del');
+}
+
+function renderParcelas() {
+  const el = document.getElementById('parc-content'); const rows = [];
+  db.emprestimos.forEach(e => {
+    if (e.parcelas<=1) return;
+    const cli=getCli(e.clienteId); const c=calcEmp(e); const vParc=c.total/e.parcelas;
+    const dt0=new Date(e.data+'T00:00:00');
+    for (let i=0; i<e.parcelas; i++) {
+      const key=`${e.id}_${i}`; const extra=(db.parcelasExtra||{})[key]||{};
+      const dtV=extra.venc||(()=>{const d=new Date(dt0);d.setMonth(d.getMonth()+i+1);return d.toISOString().split('T')[0];})();
+      const valor=extra.valor||vParc; const dif=diffD(dtV);
+      const sit=extra.status||(dif>0?'Atrasado':c.pago>=(vParc*(i+1))?'Pago':'Pendente');
+      rows.push({key,empId:e.id,idx:i,cli:cli.nome,parcN:`${i+1}/${e.parcelas}`,dtV,valor,sit});
+    }
+  });
+  if (!rows.length) { el.innerHTML=`<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Nenhum empréstimo parcelado cadastrado</p></div>`; return; }
+  el.innerHTML=`<div class="card" style="margin:0"><div style="overflow-x:auto"><table>
+    <thead><tr><th>Cliente</th><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody>${rows.map(r=>{const bc=r.sit==='Pago'?'pago':r.sit==='Atrasado'?'atrasado':'pendente';
+      return`<tr><td style="font-weight:700">${r.cli}</td><td style="text-align:center;color:var(--muted)">${r.parcN}</td><td style="color:var(--muted)">${fmtD(r.dtV)}</td><td style="font-weight:700">${brl(r.valor)}</td><td><span class="badge ${bc}">${r.sit}</span></td>
+      <td><div style="display:flex;gap:6px"><button class="btn xs warn" onclick="editarParcela(${r.empId},${r.idx})"><i class="ti ti-edit"></i> Editar</button>
+      <select onchange="mudarStatusParc('${r.key}',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;background:var(--bg2);color:var(--white)">
+        <option${r.sit==='Pendente'?' selected':''}>Pendente</option><option${r.sit==='Pago'?' selected':''}>Pago</option><option${r.sit==='Atrasado'?' selected':''}>Atrasado</option><option${r.sit==='Renegociado'?' selected':''}>Renegociado</option>
+      </select></div></td></tr>`;
+    }).join('')}</tbody></table></div></div>`;
+}
+
+function editarParcela(empId,idx) {
+  const key=`${empId}_${idx}`; const extra=(db.parcelasExtra||{})[key]||{};
+  const e=db.emprestimos.find(x=>x.id===empId); const c=calcEmp(e); const vParc=c.total/e.parcelas;
+  const dt0=new Date(e.data+'T00:00:00'); dt0.setMonth(dt0.getMonth()+idx+1);
+  document.getElementById('mp-empid').value=empId; document.getElementById('mp-idx').value=idx;
+  document.getElementById('mp-venc').value=extra.venc||dt0.toISOString().split('T')[0];
+  document.getElementById('mp-valor').value=extra.valor||vParc.toFixed(2);
+  document.getElementById('mp-status').value=extra.status||'Pendente';
+  document.getElementById('mp-obs').value=extra.obs||'';
+  abrirModal('modal-parc');
+}
+
+function salvarParcela() {
+  if (!db.parcelasExtra) db.parcelasExtra={};
+  const key=`${document.getElementById('mp-empid').value}_${document.getElementById('mp-idx').value}`;
+  db.parcelasExtra[key]={venc:document.getElementById('mp-venc').value,valor:parseFloat(document.getElementById('mp-valor').value),status:document.getElementById('mp-status').value,obs:document.getElementById('mp-obs').value};
+  salvarDB(); fecharModal('modal-parc'); renderParcelas();
+}
+
+function mudarStatusParc(key,status) {
+  if (!db.parcelasExtra) db.parcelasExtra={};
+  if (!db.parcelasExtra[key]) db.parcelasExtra[key]={};
+  db.parcelasExtra[key].status=status;
+  salvarDB(); renderParcelas();
+}
+
+function calcCalc() {
+  const v=parseFloat(document.getElementById('cal-valor').value)||0;
+  const t=parseFloat(document.getElementById('cal-taxa').value)||10;
+  const pr=parseInt(document.getElementById('cal-prazo').value)||1;
+  const np=parseInt(document.getElementById('cal-parc').value)||1;
+  const jMes=v*t/100, jDia=jMes/30, jTot=jMes*pr, total=v+jTot, vParc=total/np;
+  document.getElementById('cal-jmes').textContent=brl(jMes);
+  document.getElementById('cal-jdia').textContent=brl(jDia)+'/dia';
+  document.getElementById('cal-jtot').textContent=brl(jTot);
+  document.getElementById('cal-vparc').textContent=np>1?brl(vParc):'—';
+  document.getElementById('cal-total').textContent=brl(total);
+  if (np>1&&v>0) {
+    const rows=Array.from({length:np},(_,i)=>`<div class="parc-row"><span style="color:var(--muted)">Parcela ${i+1}</span><span style="font-weight:700;color:var(--green)">${brl(vParc)}</span></div>`).join('');
+    document.getElementById('cal-tabela').innerHTML=`<div class="sec-title">Tabela de parcelas</div><div style="border:1px solid var(--border);border-radius:8px;padding:0 .9rem;background:var(--bg2)">${rows}</div>`;
+  } else document.getElementById('cal-tabela').innerHTML='';
+}
+
+function relTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['ativos','quitados','atraso','juros'][i]===id);});
+  document.querySelectorAll('.sub-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('rel-'+id).classList.add('active'); renderRel(id);
+}
+
+function renderRel(id) {
+  const el = document.getElementById('rel-'+id);
+  if (id==='juros') {
+    const m=new Date().getMonth(), a=new Date().getFullYear(), pags=[];
+    db.emprestimos.forEach(e=>{(e.pagamentos||[]).forEach((p,pi)=>{const d=new Date(p.data+'T00:00:00');if(d.getMonth()===m&&d.getFullYear()===a)pags.push({...p,empId:e.id,pi,cliente:getCli(e.clienteId).nome});});});
+    el.innerHTML = pags.length
+      ? `<div style="padding:.5rem 0">` + pags.map(p=>`<div class="venc-row"><div><div style="font-weight:700;font-size:13px">${p.cliente}</div><div style="color:var(--muted);font-size:11px">${fmtD(p.data)}${p.ref?' · '+p.ref:''}${p.obs?' · '+p.obs:''}</div></div>
+          <div style="display:flex;align-items:center;gap:10px"><div style="font-weight:800;font-size:15px;color:var(--green)">${brl(p.valor)}</div>
+          <button class="btn xs warn" onclick="editarPagamento(${p.empId},${p.pi})"><i class="ti ti-edit"></i></button>
+          <button class="btn xs danger" onclick="excluirPagamento(${p.empId},${p.pi})"><i class="ti ti-trash"></i></button></div></div>`).join('')
+        + `<div style="text-align:right;margin-top:.9rem;font-size:15px;font-weight:800;color:var(--green);background:var(--green-bg);border:1px solid var(--green-dim);border-radius:8px;padding:.75rem 1rem">Total do mês: ${brl(pags.reduce((s,p)=>s+p.valor,0))}</div></div>`
+      : '<div class="empty-state"><i class="ti ti-coin-off"></i><p>Nenhum pagamento registrado este mês</p></div>';
+    return;
+  }
+  let lista=[];
+  if(id==='ativos') lista=db.emprestimos.filter(e=>calcEmp(e).sit==='Em Aberto');
+  if(id==='quitados') lista=db.emprestimos.filter(e=>calcEmp(e).sit==='Pago');
+  if(id==='atraso') lista=db.emprestimos.filter(e=>calcEmp(e).sit==='Atrasado');
+  if (!lista.length) { el.innerHTML=`<div class="empty-state"><i class="ti ti-file-off"></i><p>Nenhum registro encontrado</p></div>`; return; }
+  el.innerHTML=`<div style="overflow-x:auto"><table>
+    <thead><tr><th>Cliente</th><th>Data</th><th>Valor</th><th>Total devido</th><th>Pago</th><th>Saldo</th><th>Ações</th></tr></thead>
+    <tbody>${lista.map(e=>{const c=calcEmp(e);const cli=getCli(e.clienteId);const sCor=id==='quitados'?'var(--green)':id==='atraso'?'var(--red)':'var(--white)';
+      return`<tr><td style="font-weight:700">${cli.nome}</td><td style="color:var(--muted)">${fmtD(e.data)}</td><td>${brl(e.valor)}</td><td style="color:var(--yellow);font-weight:700">${brl(c.total)}</td><td style="color:var(--green);font-weight:700">${brl(c.pago)}</td><td style="font-weight:800;color:${sCor}">${brl(c.saldo)}</td>
+      <td><div style="display:flex;gap:4px"><button class="btn xs warn" onclick="editarEmp(${e.id})"><i class="ti ti-edit"></i></button><button class="btn xs danger" onclick="confirmarDelEmp(${e.id})"><i class="ti ti-trash"></i></button></div></td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+function editarPagamento(empId,pi) {
+  const e=db.emprestimos.find(x=>x.id===empId); if(!e||(e.pagamentos||[])[pi]===undefined) return;
+  const p=e.pagamentos[pi];
+  document.getElementById('modal-pag-title').innerHTML='<i class="ti ti-edit" style="color:var(--yellow)"></i> Editar Pagamento';
+  document.getElementById('mpag-empid').value=empId; document.getElementById('mpag-idx').value=pi;
+  document.getElementById('mpag-data').value=p.data; document.getElementById('mpag-valor').value=p.valor;
+  document.getElementById('mpag-forma').value=p.forma||'Dinheiro';
+  document.getElementById('mpag-ref').value=p.ref||''; document.getElementById('mpag-obs').value=p.obs||'';
+  abrirModal('modal-pag');
+}
+
+function excluirPagamento(empId,pi) {
+  const e=db.emprestimos.find(x=>x.id===empId); if(!e) return;
+  document.getElementById('del-msg').textContent='Excluir este pagamento?';
+  document.getElementById('del-warn').style.display='none';
+  document.getElementById('del-btn').onclick=()=>{
+    e.pagamentos.splice(pi,1); salvarDB(); fecharModal('modal-del');
+    renderRel('juros'); renderEmpTab(); renderDash();
+  };
+  abrirModal('modal-del');
+}
+
+calcCalc();
+</script>
+</body>
+</html>
